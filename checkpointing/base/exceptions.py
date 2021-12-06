@@ -1,0 +1,2 @@
+class CheckpointNotExist(Exception):
+    pass

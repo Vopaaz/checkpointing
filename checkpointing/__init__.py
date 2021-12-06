@@ -1,1 +1,1 @@
-info = "WIP"
+CACHE_DIR = ".checkpointing"
