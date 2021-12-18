@@ -2,6 +2,7 @@ from typing import Callable, TypeVar, List, Dict, Tuple, Union
 from abc import abstractmethod, ABC
 from checkpointing.decorator.exceptions import CheckpointNotExist
 import inspect
+from functools import wraps
 
 ReturnValue = TypeVar("ReturnValue")
 """
@@ -34,8 +35,9 @@ class Context:
     @property
     def arguments(self):
         signature = inspect.signature(self.__func)
-        bound_args = signature.bind(*self.__args, **self.__kwargs)
-        return bound_args.arguments
+        args = signature.bind(*self.__args, **self.__kwargs)
+        args.apply_defaults()
+        return args.arguments
 
 
 class DecoratorCheckpoint(ABC):
@@ -55,19 +57,28 @@ class DecoratorCheckpoint(ABC):
         self.error: str = error
         """The behavior when identification, saving or retrieval raises unexpected exceptions."""
 
+        self.__context: Context = None
+        """The context of the latest function call"""
+
     def __call__(self, func: Callable[..., ReturnValue]) -> Callable[..., ReturnValue]:
         """Magic method invoked when used as a decorator."""
 
+        @wraps(func)
         def inner(*args, **kwargs) -> ReturnValue:
-            ctx = Context(args=args, kwargs=kwargs, func=func)
+            self.__context = Context(args=args, kwargs=kwargs, func=func)
             try:
-                res = self.retrieve(ctx)
+                res = self.retrieve(self.__context)
             except CheckpointNotExist:
                 res = func(*args, **kwargs)
-                self.save(ctx, res)
+                self.save(self.__context, res)
             return res
 
         return inner
+
+    @property
+    def context(self) -> Context:
+        """The context of the latest function call"""
+        return self.__context
 
     @abstractmethod
     def save(self, ctx: Context, result: ReturnValue) -> None:
