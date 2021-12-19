@@ -6,62 +6,8 @@ from warnings import warn
 
 from checkpointing.exceptions import CheckpointNotExist, ExpensiveOverheadWarning
 from checkpointing.util.timing import Timer, timed_run
-
-ReturnValue = TypeVar("ReturnValue")
-"""
-Return value of the function
-"""
-
-
-class Context:
-    """
-    Context providing information for a function call.
-    """
-
-    def __init__(self, func, args, kwargs) -> None:
-        """
-        Args:
-            args: the non-keywords arguments of the function call
-            kwargs: the keyword arguments of the function call
-            func: the function object that is being called
-        """
-
-        self.__func: Callable[..., ReturnValue] = func
-        """Function called"""
-
-        self.__args: List = args
-        """Arguments of the function call"""
-
-        self.__kwargs: Dict = kwargs
-        """Keyword arguments of the function call"""
-
-        self.__signature = inspect.signature(self.__func)
-        """Signature of the function"""
-
-    @property
-    def arguments(self) -> Dict:
-        """
-        Dictionary or OrderedDictionary of the function arguments and their actually applied parameter values in the function call.
-
-        >>> def foo(a, b=1, c=None, d=4):
-        ...     pass
-        >>>
-        >>> # Equivalent to the context computed for: foo(1, 2, c=3)
-        >>> ctx = Context(foo, (1, 2), {"c": 3})
-        >>>
-        >>> dict(ctx.arguments)
-        {'a': 1, 'b': 2, 'c': 3, 'd': 4}
-        """
-        args = self.__signature.bind(*self.__args, **self.__kwargs)
-        args.apply_defaults()
-        return args.arguments
-
-    @property
-    def function_name(self) -> str:
-        """
-        Name of the function.
-        """
-        return self.__func.__name__
+from checkpointing.decorator.typing import ReturnValue, Identifier
+from checkpointing.decorator.context import Context
 
 
 class DecoratorCheckpoint(ABC, Generic[ReturnValue]):
@@ -70,7 +16,8 @@ class DecoratorCheckpoint(ABC, Generic[ReturnValue]):
     def __init__(self, error: str = "warn") -> None:
         """
         Args:
-            error: the behavior when retrieval or saving raises unexpected exceptions (exceptions other than `CheckpointNotExist`).
+            error: the behavior when retrieval or saving raises unexpected exceptions 
+                (exceptions other than checkpointing.exceptions.CheckpointNotExistCheckpointNotExist).
                 Could be:
                 - `"raise"`, the exception will be raised.
                 - `"warn"`, a warning will be issued to inform that the checkpointing task has failed.
@@ -178,9 +125,6 @@ class DecoratorCheckpoint(ABC, Generic[ReturnValue]):
         """
         return self.save(self.__context, result)
 
-
-Identifier = TypeVar("Identifier")
-"""Identifier of a function call context"""
 
 class HashDecoratorCheckpoint(DecoratorCheckpoint, Generic[Identifier]):
     """
