@@ -5,7 +5,7 @@ from time import sleep
 def test_timer_returns_correct_time():
     t = Timer().start()
     sleep(0.1)
-    assert 0.05 <= t.time <= 0.15
+    assert 0.08 <= t.time <= 0.12
 
 
 @raises(RuntimeError)

@@ -39,13 +39,28 @@ class Context:
         """Signature of the function"""
 
     @property
-    def arguments(self):
+    def arguments(self) -> Dict:
+        """
+        Dictionary or OrderedDictionary of the function arguments and their actually applied parameter values in the function call.
+
+        >>> def foo(a, b=1, c=None, d=4):
+        ...     pass
+        >>>
+        >>> # Equivalent to the context computed for: foo(1, 2, c=3)
+        >>> ctx = Context(foo, (1, 2), {"c": 3})
+        >>>
+        >>> dict(ctx.arguments)
+        {'a': 1, 'b': 2, 'c': 3, 'd': 4}
+        """
         args = self.__signature.bind(*self.__args, **self.__kwargs)
         args.apply_defaults()
         return args.arguments
 
     @property
-    def function_name(self):
+    def function_name(self) -> str:
+        """
+        Name of the function.
+        """
         return self.__func.__name__
 
 
@@ -90,17 +105,29 @@ class DecoratorCheckpoint(ABC):
     def __timed_run(self, func: Callable[..., ReturnValue], args: Tuple, kwargs: Dict) -> Tuple[ReturnValue, float]:
         """
         Run the function with the arguments, recording the run time.
+
+        Returns:
+            Tuple of two elements:
+            - Return value of the function call
+            - Time it takes to run the function
         """
         t = Timer().start()
         res = func(*args, **kwargs)
         return res, t.time
 
-    def __warn_if_more_expensive(self, retrieve_time, run_time):
-        if retrieve_time >= run_time:
+    def __warn_if_more_expensive(self, retrieve_time: float, run_time: float) -> None:
+        """
+        Warn the user if retrieval takes longer than running the function.
+
+        Args:
+            retrieve_time: time for retrieving the cached result
+            run_time: time for running the function
+        """
+        if retrieve_time > run_time:
             warn(
-                f"The overhead for checkpointing function <{self.__context.function_name}> takes more time than the function call itself "
-                f"({retrieve_time:.2f} > {run_time:.2f}). "
-                "Consider optimize the retrieval process or just remove the checkpoint, to let the function run every time.",
+                f"The overhead for checkpointing '{self.__context.function_name}' takes more time than the function call itself "
+                f"({retrieve_time:.2f}s > {run_time:.2f}s). "
+                "Consider optimize the checkpoint or just remove it, and let the function execute every time.",
                 category=ExpensiveOverheadWarning,
                 stacklevel=3,
             )
@@ -147,8 +174,3 @@ class DecoratorCheckpoint(ABC):
             context: Context of the function call
         """
         pass
-
-    def __time_aware_rerun_save(self):
-        """
-        Re-run the function and
-        """
