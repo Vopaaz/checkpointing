@@ -1,2 +1,0 @@
-class CheckpointNotExist(Exception):
-    pass
