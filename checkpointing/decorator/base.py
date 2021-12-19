@@ -1,11 +1,11 @@
 import inspect
 from abc import ABC, abstractmethod
 from functools import wraps
-from typing import Callable, Dict, List, TypeVar, Tuple
+from typing import Callable, Dict, Generic, List, Tuple, TypeVar
 from warnings import warn
 
 from checkpointing.exceptions import CheckpointNotExist, ExpensiveOverheadWarning
-from checkpointing.util.timing import Timer
+from checkpointing.util.timing import Timer, timed_run
 
 ReturnValue = TypeVar("ReturnValue")
 """
@@ -64,13 +64,13 @@ class Context:
         return self.__func.__name__
 
 
-class DecoratorCheckpoint(ABC):
+class DecoratorCheckpoint(ABC, Generic[ReturnValue]):
     """The base class for any decorator checkpoints."""
 
     def __init__(self, error: str = "warn") -> None:
         """
         Args:
-            error: the behavior when identification, saving, or retrieval raises unexpected exceptions (exceptions other than `CheckpointNotExist`).
+            error: the behavior when retrieval or saving raises unexpected exceptions (exceptions other than `CheckpointNotExist`).
                 Could be:
                 - `"raise"`, the exception will be raised.
                 - `"warn"`, a warning will be issued to inform that the checkpointing task has failed.
@@ -95,25 +95,12 @@ class DecoratorCheckpoint(ABC):
             if retrieve_success:
                 return res
             else:
-                res, run_time = self.__timed_run(func, args, kwargs)
+                res, run_time = timed_run(func, args, kwargs)
                 self.__warn_if_more_expensive(retrieve_time, run_time)
-                self.save(self.__context, res)
+                self._call_save(res)
             return res
 
         return inner
-
-    def __timed_run(self, func: Callable[..., ReturnValue], args: Tuple, kwargs: Dict) -> Tuple[ReturnValue, float]:
-        """
-        Run the function with the arguments, recording the run time.
-
-        Returns:
-            Tuple of two elements:
-            - Return value of the function call
-            - Time it takes to run the function
-        """
-        t = Timer().start()
-        res = func(*args, **kwargs)
-        return res, t.time
 
     def __warn_if_more_expensive(self, retrieve_time: float, run_time: float) -> None:
         """
@@ -146,6 +133,14 @@ class DecoratorCheckpoint(ABC):
         """
         pass
 
+    def _call_retrieve(self) -> ReturnValue:
+        """
+        Call `self.retrieve()` with correct parameters.
+
+        Overwrite this method to create abstract subclasses that needs different parameters for retrieving the result.
+        """
+        return self.retrieve(self.__context)
+
     def __timed_tentative_retrieve(self) -> Tuple[bool, ReturnValue, float]:
         """
         Retrive the data based on the function call context tentatively,
@@ -160,7 +155,7 @@ class DecoratorCheckpoint(ABC):
 
         timer = Timer().start()
         try:
-            res = self.retrieve(self.__context)
+            res = self._call_retrieve()
             return True, res, timer.time
         except CheckpointNotExist:
             return False, None, timer.time
@@ -174,3 +169,45 @@ class DecoratorCheckpoint(ABC):
             context: Context of the function call
         """
         pass
+
+    def _call_save(self, result: ReturnValue) -> None:
+        """
+        Call `self.save()` with correct parameters.
+
+        Overwrite this method to create abstract subclasses that needs different parameters for saving the result.
+        """
+        return self.save(self.__context, result)
+
+
+Identifier = TypeVar("Identifier")
+"""Identifier of a function call context"""
+
+class HashDecoratorCheckpoint(DecoratorCheckpoint, Generic[Identifier]):
+    """
+    Checkpoint that (conceptually) hash the context to a unique identifier,
+    and use the identifier for the retrieval and saving.
+    """
+
+    @abstractmethod
+    def hash(self, context: Context) -> Identifier:
+        pass
+
+    @abstractmethod
+    def retrieve(self, identifier: Identifier) -> ReturnValue:
+        pass
+
+    def _call_retrieve(self) -> ReturnValue:
+        id = self.identify(self.__context)
+        return self.retrieve(id)
+
+    @abstractmethod
+    def save(self, identifier: Identifier, result: ReturnValue) -> None:
+        pass
+
+    def _call_save(self, result: ReturnValue) -> None:
+        id = self.identify(self.__context)
+        self.save(id, result)
+
+
+class ComparisonDecoratorCheckpoint(DecoratorCheckpoint):
+    pass
