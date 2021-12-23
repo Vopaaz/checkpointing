@@ -16,8 +16,8 @@ class DecoratorCheckpoint(ABC, Generic[ReturnValue]):
     def __init__(self, error: str = "warn") -> None:
         """
         Args:
-            error: the behavior when retrieval or saving raises unexpected exceptions 
-                (exceptions other than checkpointing.exceptions.CheckpointNotExistCheckpointNotExist).
+            error: the behavior when retrieval or saving raises unexpected exceptions
+                (exceptions other than checkpointing.CheckpointNotExist).
                 Could be:
                 - `"raise"`, the exception will be raised.
                 - `"warn"`, a warning will be issued to inform that the checkpointing task has failed.
@@ -70,7 +70,7 @@ class DecoratorCheckpoint(ABC, Generic[ReturnValue]):
     def retrieve(self, context: Context) -> ReturnValue:
         """
         Retrieve the data based on the function call context.
-        If the there is no corresponding previously saved results, raise a `checkpointing.exceptions.CheckpointNotExist`.
+        If the there is no corresponding previously saved results, raise a `checkpointing.CheckpointNotExist`.
 
         Args:
             context: Context of the function call
@@ -91,7 +91,7 @@ class DecoratorCheckpoint(ABC, Generic[ReturnValue]):
     def __timed_tentative_retrieve(self) -> Tuple[bool, ReturnValue, float]:
         """
         Retrive the data based on the function call context tentatively,
-        tracking the time and capturing the `CheckpointNotExist` error.
+        tracking the time and capturing the checkpointing.exceptions.CheckpointNotExist error.
 
         Returns:
             A tuple of three elements:
@@ -134,24 +134,54 @@ class HashDecoratorCheckpoint(DecoratorCheckpoint, Generic[Identifier]):
 
     @abstractmethod
     def hash(self, context: Context) -> Identifier:
+        """
+        Hash the function call context into a unique identifier.
+        The identifier should encode any information that determines what the return value would be.
+
+        Args:
+            context: function call context
+
+        Returns:
+            A unique identifier for the function call.
+            This will be used to retrive/save the function call result.
+        """
         pass
 
     @abstractmethod
     def retrieve(self, identifier: Identifier) -> ReturnValue:
+        """
+        Retrieve the data based on the identifier.
+        If the there is no corresponding previously saved results, raise a `checkpointing.CheckpointNotExist`.
+
+        Args:
+            identifier: Identifier of the function call
+
+        Returns:
+            The retrieved return value of the function call.
+        """
         pass
 
     def _call_retrieve(self) -> ReturnValue:
+        """
+        Call self.retrieve() with the identifier.
+        """
         id = self.identify(self.__context)
         return self.retrieve(id)
 
     @abstractmethod
     def save(self, identifier: Identifier, result: ReturnValue) -> None:
+        """
+        Save the result of the function based on the identifier.
+
+        Args:
+            identifier: Identifier of the function call
+            result: Return value of the function call
+        """
         pass
 
     def _call_save(self, result: ReturnValue) -> None:
+        """
+        Call self.save() with the identifier
+        """
         id = self.identify(self.__context)
         self.save(id, result)
-
-
-class ComparisonDecoratorCheckpoint(DecoratorCheckpoint):
-    pass

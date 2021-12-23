@@ -1,1 +1,1 @@
-CACHE_DIR = ".checkpointing"
+from checkpointing.exceptions import CheckpointNotExist
