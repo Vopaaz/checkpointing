@@ -1,4 +1,4 @@
-from checkpointing.exceptions import ExpensiveOverheadWarning, CheckpointNotExist
+from checkpointing.exceptions import ExpensiveOverheadWarning, CheckpointNotExist, CheckpointFailedError, CheckpointFailedWarning
 from checkpointing.decorator.base import Context, DecoratorCheckpoint
 from warnings import catch_warnings
 from time import sleep
@@ -56,7 +56,6 @@ class SlowRetrievalDecoratorCheckpoint(DecoratorCheckpoint):
         sleep(0.1)
         raise CheckpointNotExist
 
-
     def save(self, context: Context, result) -> None:
         pass
 
@@ -70,6 +69,46 @@ def test_raise_warning_when_overhead_larger_than_computation():
     with catch_warnings(record=True) as w:
         decorated_by_slow()
 
-        print(w)
         assert len(w) == 1
         assert issubclass(w[0].category, ExpensiveOverheadWarning)
+
+
+class ErroneousDecoratorCheckpoint(DecoratorCheckpoint):
+    def retrieve(self, context: Context):
+        raise RuntimeError
+
+    def save(self, context: Context, result) -> None:
+        pass
+
+@ErroneousDecoratorCheckpoint(error="raise")
+def decorated_by_raise():
+    pass
+
+@ErroneousDecoratorCheckpoint(error="warn")
+def decorated_by_warn():
+    pass
+
+@ErroneousDecoratorCheckpoint(error="ignore")
+def decorated_by_ignore():
+    pass
+
+
+def test_deal_with_error_according_to_error_args():
+    failed = False
+    try:
+        decorated_by_raise()
+    except RuntimeError:
+        failed = True
+
+    assert failed
+
+    with catch_warnings(record=True) as w:
+        decorated_by_warn()
+
+        assert len(w) == 1
+        assert issubclass(w[0].category, CheckpointFailedWarning)
+
+    with catch_warnings(record=True) as w:
+        decorated_by_ignore()
+
+        assert len(w) == 0
