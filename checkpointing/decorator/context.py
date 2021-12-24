@@ -63,3 +63,23 @@ class Context:
         'checkpointing.decorator.context.foo'
         """
         return ".".join([self.__func.__module__, self.__func.__qualname__])
+
+    @property
+    def function_code(self) -> str:
+        r"""
+        The source code body of the function,
+        formatted as-is, including any comments.
+
+        >>> def foo(a, b):
+        ...     c = a + b # add a and b
+        ...     return c
+        >>>
+        >>> # Equivalent to the context computed for: foo(1, 2)
+        >>> ctx = Context(foo, (1, 2), {})
+        >>>
+        >>> ctx.function_code
+        '    c = a + b # add a and b\n    return c\n'
+        """
+
+        sourcelines, _ = inspect.getsourcelines(self.__func)
+        return "".join(sourcelines[1:])

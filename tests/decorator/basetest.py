@@ -1,7 +1,17 @@
-from checkpointing.exceptions import ExpensiveOverheadWarning, CheckpointNotExist, CheckpointFailedError, CheckpointFailedWarning
+import warnings
+
 from checkpointing.decorator.base import Context, DecoratorCheckpoint
-from warnings import catch_warnings
+from checkpointing.exceptions import (
+    CheckpointFailedError,
+    CheckpointFailedWarning,
+    CheckpointNotExist,
+    ExpensiveOverheadWarning,
+)
+
+warnings.filterwarnings("always", module=__name__)
+
 from time import sleep
+from warnings import catch_warnings
 
 
 class DummyDecoratorCheckpoint(DecoratorCheckpoint):
@@ -80,13 +90,16 @@ class ErroneousDecoratorCheckpoint(DecoratorCheckpoint):
     def save(self, context: Context, result) -> None:
         pass
 
+
 @ErroneousDecoratorCheckpoint(error="raise")
 def decorated_by_raise():
     pass
 
+
 @ErroneousDecoratorCheckpoint(error="warn")
 def decorated_by_warn():
     pass
+
 
 @ErroneousDecoratorCheckpoint(error="ignore")
 def decorated_by_ignore():
@@ -112,3 +125,12 @@ def test_deal_with_error_according_to_error_args():
         decorated_by_ignore()
 
         assert len(w) == 0
+
+
+def test_validate_params():
+    failed = False
+    try:
+        DummyDecoratorCheckpoint(error="no")
+    except ValueError:
+        failed = True
+    assert failed

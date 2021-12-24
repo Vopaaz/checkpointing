@@ -31,6 +31,8 @@ class DecoratorCheckpoint(ABC, Generic[ReturnValue]):
         self.__context: Context = None
         """The context of the latest function call"""
 
+        self.__validate_params()
+
     def __validate_params(self):
         error = ["raise", "warn", "ignore"]
         if self.__error not in error:
