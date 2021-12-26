@@ -132,15 +132,17 @@ class DecoratorCheckpoint(ABC, Generic[ReturnValue]):
                     It should be dealt within the saving/retrieving methods.
         """
         if self.__error == "raise":
+            logger.debug(f"Re-raising {error} for {self.__context.function_name}({self.__context.arguments})")
             raise error
         elif self.__error == "warn":
+            logger.debug(f"Warning {error} for {self.__context.function_name}({self.__context.arguments})")
             warn(
                 f"Checkpointing for {self.__context.function_name} failed because of the following error: {str(error)}. "
                 "The function is called to compute the return value.",
                 CheckpointFailedWarning,
             )
         else:  # self.__error == "ignore"
-            pass
+            logger.debug(f"Ignoring {error} for {self.__context.function_name}({self.__context.arguments})")
 
     @abstractmethod
     def save(self, context: Context, result: ReturnValue) -> None:
