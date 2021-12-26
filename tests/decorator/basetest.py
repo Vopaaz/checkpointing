@@ -8,8 +8,6 @@ from checkpointing.exceptions import (
     ExpensiveOverheadWarning,
 )
 
-warnings.filterwarnings("always", module=__name__)
-
 from time import sleep
 from warnings import catch_warnings
 

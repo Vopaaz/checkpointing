@@ -45,7 +45,6 @@ class DecoratorCheckpoint(ABC, Generic[ReturnValue]):
 
         @wraps(func)
         def inner(*args, **kwargs) -> ReturnValue:
-            logger.debug(f"{func.__qualname__} called with {args}, {kwargs}")
             self.__context = Context(func, args, kwargs)
 
             retrieve_success, res, retrieve_time = self.__timed_safe_retrieve()
@@ -62,15 +61,19 @@ class DecoratorCheckpoint(ABC, Generic[ReturnValue]):
 
         return inner
 
-    def __warn_if_more_expensive(self, checkpoint_time: float, run_time: float) -> None:
+    def __warn_if_more_expensive(self, checkpoint_time: float, run_time: float, tol: float = 0.01) -> None:
         """
         Warn the user if retrieval takes longer than running the function.
 
         Args:
-            checkpoint_time: time for retrieving and saving the cached result
+            checkpoint_time: approximate time for retrieving and saving the cached result
             run_time: time for running the function
+            tol: tolerance of the difference between checkpoint_time and run_time in seconds.
+                Larger value indicates more tolerance of slow checkpointing, compared to actual function running, without raising an error.
+                Negative value indicates checkpoint should take less time than function running to avoid raising an error.
         """
-        if checkpoint_time > run_time:
+
+        if checkpoint_time > run_time + tol:
             warn(
                 f"The overhead for checkpointing '{self.__context.function_name}' could possibly take more time than the function call itself "
                 f"({checkpoint_time:.2f}s > {run_time:.2f}s). "
@@ -132,17 +135,15 @@ class DecoratorCheckpoint(ABC, Generic[ReturnValue]):
                     It should be dealt within the saving/retrieving methods.
         """
         if self.__error == "raise":
-            logger.debug(f"Re-raising {error} for {self.__context.function_name}({self.__context.arguments})")
             raise error
         elif self.__error == "warn":
-            logger.debug(f"Warning {error} for {self.__context.function_name}({self.__context.arguments})")
             warn(
                 f"Checkpointing for {self.__context.function_name} failed because of the following error: {str(error)}. "
                 "The function is called to compute the return value.",
                 CheckpointFailedWarning,
             )
         else:  # self.__error == "ignore"
-            logger.debug(f"Ignoring {error} for {self.__context.function_name}({self.__context.arguments})")
+            pass
 
     @abstractmethod
     def save(self, context: Context, result: ReturnValue) -> None:
