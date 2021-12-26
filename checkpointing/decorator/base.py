@@ -8,6 +8,7 @@ from checkpointing.exceptions import CheckpointNotExist, ExpensiveOverheadWarnin
 from checkpointing.util.timing import Timer, timed_run
 from checkpointing.decorator.typing import ReturnValue, Identifier
 from checkpointing.decorator.context import Context
+from checkpointing.logging import logger
 
 
 class DecoratorCheckpoint(ABC, Generic[ReturnValue]):
@@ -40,19 +41,24 @@ class DecoratorCheckpoint(ABC, Generic[ReturnValue]):
 
     def __call__(self, func: Callable[..., ReturnValue]) -> Callable[..., ReturnValue]:
         """Magic method invoked when used as a decorator."""
+        logger.debug(f"{self.__class__.__name__} created for {func.__qualname__}")
 
         @wraps(func)
         def inner(*args, **kwargs) -> ReturnValue:
+            logger.debug(f"{func.__qualname__} called with {args}, {kwargs}")
             self.__context = Context(func, args, kwargs)
 
             retrieve_success, res, retrieve_time = self.__timed_safe_retrieve()
             if retrieve_success:
+                logger.info(f"Result of {func.__qualname__}(**{self.__context.arguments}) retrieved from cache")
                 return res
             else:
+                logger.info(f"Result of {func.__qualname__}(**{self.__context.arguments}) unavailable from cache")
                 res, run_time = timed_run(func, args, kwargs)
                 save_time = self.__timed_safe_save(res)
                 self.__warn_if_more_expensive(retrieve_time + save_time, run_time)
-            return res
+                logger.info(f"Result of {func.__qualname__}(**{self.__context.arguments}) saved to cache")
+                return res
 
         return inner
 
