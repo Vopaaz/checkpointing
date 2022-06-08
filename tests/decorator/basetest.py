@@ -1,6 +1,6 @@
 import warnings
 
-from checkpointing.decorator.base import Context, DecoratorCheckpoint
+from checkpointing.decorator.base import Context, DecoratorCheckpointBase
 from checkpointing.exceptions import (
     CheckpointFailedError,
     CheckpointFailedWarning,
@@ -12,7 +12,7 @@ from time import sleep
 from warnings import catch_warnings
 
 
-class DummyDecoratorCheckpoint(DecoratorCheckpoint):
+class DummyDecoratorCheckpoint(DecoratorCheckpointBase):
     def retrieve(self, ctx: Context):
         return None
 
@@ -40,26 +40,26 @@ def test_context_compiles_correct_arguments():
     assert Context(foo, (1, 2, 3, 4, 5), {}).arguments == expected
 
     decorated_foo(1, 2, 3, 4, 5)
-    assert deco._DecoratorCheckpoint__context.arguments == expected
+    assert deco._context.arguments == expected
 
     decorated_foo(arg1=1, arg2=2, arg3=3, arg4=4)
-    assert deco._DecoratorCheckpoint__context.arguments == expected
+    assert deco._context.arguments == expected
 
     decorated_foo(1, 2, 3, arg4=4, arg5=5)
-    assert deco._DecoratorCheckpoint__context.arguments == expected
+    assert deco._context.arguments == expected
 
     expected["arg5"] = 6
     decorated_foo(1, 2, 3, 4, arg5=6)
-    assert deco._DecoratorCheckpoint__context.arguments == expected
+    assert deco._context.arguments == expected
 
     decorated_foo(1, 2, 3, 4, 6)
-    assert deco._DecoratorCheckpoint__context.arguments == expected
+    assert deco._context.arguments == expected
 
     decorated_foo(1, 2, 3, 4, 6, 6)
-    assert deco._DecoratorCheckpoint__context.arguments == expected
+    assert deco._context.arguments == expected
 
 
-class SlowRetrievalDecoratorCheckpoint(DecoratorCheckpoint):
+class SlowRetrievalDecoratorCheckpoint(DecoratorCheckpointBase):
     def retrieve(self, context: Context):
         sleep(0.1)
         raise CheckpointNotExist
@@ -81,7 +81,7 @@ def test_raise_warning_when_overhead_larger_than_computation():
         assert issubclass(w[0].category, ExpensiveOverheadWarning)
 
 
-class ErroneousDecoratorCheckpoint(DecoratorCheckpoint):
+class ErroneousDecoratorCheckpoint(DecoratorCheckpointBase):
     def retrieve(self, context: Context):
         raise RuntimeError
 

@@ -1,6 +1,6 @@
 import inspect
 from typing import List, Dict, Tuple, Callable
-from checkpointing.decorator.typing import ReturnValue
+from checkpointing._typing import ReturnValue
 
 
 class Context:
@@ -67,7 +67,7 @@ class Context:
     @property
     def function_code(self) -> str:
         r"""
-        The source code body of the function,
+        The source code body of the function, ignoring the function signature,
         formatted as-is, including any comments.
 
         >>> def foo(a, b):

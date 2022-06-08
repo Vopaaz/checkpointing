@@ -1,4 +1,3 @@
-import inspect
 from abc import ABC, abstractmethod
 from functools import wraps
 from typing import Callable, Dict, Generic, List, Tuple, TypeVar
@@ -6,13 +5,13 @@ from warnings import warn
 
 from checkpointing.exceptions import CheckpointNotExist, ExpensiveOverheadWarning, CheckpointFailedWarning
 from checkpointing.util.timing import Timer, timed_run
-from checkpointing.decorator.typing import ReturnValue, Identifier
-from checkpointing.decorator.context import Context
+from checkpointing._typing import ReturnValue
+from checkpointing.context.context import Context
 from checkpointing.logging import logger
 
 
-class DecoratorCheckpoint(ABC, Generic[ReturnValue]):
-    """The base class for any decorator checkpoints."""
+class DecoratorCheckpointBase(ABC, Generic[ReturnValue]):
+    """The base class for any decorator checkpoint."""
 
     def __init__(self, error: str = "warn") -> None:
         """
@@ -24,12 +23,25 @@ class DecoratorCheckpoint(ABC, Generic[ReturnValue]):
                 - `"warn"`, a warning will be issued to inform that the checkpointing task has failed.
                     But the user function will be invoked and executed as if it wasn't checkpointed.
                 - `"ignore"`, the exception will be ignored and the user function will be invoked and executed normally.
+
+        To implement a concrete class of DecoratorCheckpoint, you need to implement the following abstract methods:
+            - `save(self, context: Context, result: ReturnValue) -> None`
+            - `retrieve(self, context: Context)`
+
+        By default, function call contexts are passed as the parameters of the above functions, as indicated by their signatures.
+        However, in some cases, if you want to define an abstract subclass that have different behavior, you can also rewrite
+        the following methods that calls `save`/`retrieve` with different parameters
+            - `_call_save(self, result: ReturnValue) -> None`
+            - `_call_retrieve(self) -> None`
+
+        In these methods, you can access `self._context` for the latest function call context, and supply the `save` and `retrieve`
+        methods with more intuitive parameters that have already been preprocessed by the other functions.
         """
 
         self.__error: str = error
         """The behavior when identification, saving or retrieval raises unexpected exceptions."""
 
-        self.__context: Context = None
+        self._context: Context = None
         """The context of the latest function call"""
 
         self.__validate_params()
@@ -45,23 +57,23 @@ class DecoratorCheckpoint(ABC, Generic[ReturnValue]):
 
         @wraps(func)
         def inner(*args, **kwargs) -> ReturnValue:
-            self.__context = Context(func, args, kwargs)
+            self._context = Context(func, args, kwargs)
 
             retrieve_success, res, retrieve_time = self.__timed_safe_retrieve()
             if retrieve_success:
-                logger.info(f"Result of {func.__qualname__}(**{self.__context.arguments}) retrieved from cache")
+                logger.info(f"Result of {func.__qualname__}(**{self._context.arguments}) retrieved from cache")
                 return res
             else:
-                logger.info(f"Result of {func.__qualname__}(**{self.__context.arguments}) unavailable from cache")
+                logger.info(f"Result of {func.__qualname__}(**{self._context.arguments}) unavailable from cache")
                 res, run_time = timed_run(func, args, kwargs)
                 save_time = self.__timed_safe_save(res)
+                logger.info(f"Result of {func.__qualname__}(**{self._context.arguments}) saved to cache")
                 self.__warn_if_more_expensive(retrieve_time + save_time, run_time)
-                logger.info(f"Result of {func.__qualname__}(**{self.__context.arguments}) saved to cache")
                 return res
 
         return inner
 
-    def __warn_if_more_expensive(self, checkpoint_time: float, run_time: float, tol: float = 0.01) -> None:
+    def __warn_if_more_expensive(self, checkpoint_time: float, run_time: float, tol: float = 0.1) -> None:
         """
         Warn the user if retrieval takes longer than running the function.
 
@@ -75,7 +87,7 @@ class DecoratorCheckpoint(ABC, Generic[ReturnValue]):
 
         if checkpoint_time > run_time + tol:
             warn(
-                f"The overhead for checkpointing '{self.__context.function_name}' could possibly take more time than the function call itself "
+                f"The overhead for checkpointing '{self._context.function_name}' could possibly take more time than the function call itself "
                 f"({checkpoint_time:.2f}s > {run_time:.2f}s). "
                 "Consider optimize the checkpoint or just remove it, and let the function execute every time.",
                 category=ExpensiveOverheadWarning,
@@ -102,7 +114,7 @@ class DecoratorCheckpoint(ABC, Generic[ReturnValue]):
 
         Overwrite this method to create abstract subclasses that needs different parameters for retrieving the result.
         """
-        return self.retrieve(self.__context)
+        return self.retrieve(self._context)
 
     def __timed_safe_retrieve(self) -> Tuple[bool, ReturnValue, float]:
         """
@@ -138,7 +150,7 @@ class DecoratorCheckpoint(ABC, Generic[ReturnValue]):
             raise error
         elif self.__error == "warn":
             warn(
-                f"Checkpointing for {self.__context.function_name} failed because of the following error: {str(error)}. "
+                f"Checkpointing for {self._context.function_name} failed because of the following error: {str(error)}. "
                 "The function is called to compute the return value.",
                 CheckpointFailedWarning,
             )
@@ -161,7 +173,7 @@ class DecoratorCheckpoint(ABC, Generic[ReturnValue]):
 
         Overwrite this method to create abstract subclasses that needs different parameters for saving the result.
         """
-        return self.save(self.__context, result)
+        return self.save(self._context, result)
 
     def __timed_safe_save(self, result: ReturnValue) -> float:
         """
@@ -180,63 +192,3 @@ class DecoratorCheckpoint(ABC, Generic[ReturnValue]):
 
         return timer.time
 
-
-class HashDecoratorCheckpoint(DecoratorCheckpoint, Generic[Identifier]):
-    """
-    Checkpoint that (conceptually) hash the context to a unique identifier,
-    and use the identifier for the retrieval and saving.
-    """
-
-    @abstractmethod
-    def hash(self, context: Context) -> Identifier:
-        """
-        Hash the function call context into a unique identifier.
-        The identifier should encode any information that determines what the return value would be.
-
-        Args:
-            context: function call context
-
-        Returns:
-            A unique identifier for the function call.
-            This will be used to retrive/save the function call result.
-        """
-        pass
-
-    @abstractmethod
-    def retrieve(self, identifier: Identifier) -> ReturnValue:
-        """
-        Retrieve the data based on the identifier.
-        If the there is no corresponding previously saved results, raise a `checkpointing.CheckpointNotExist`.
-
-        Args:
-            identifier: Identifier of the function call
-
-        Returns:
-            The retrieved return value of the function call.
-        """
-        pass
-
-    def _call_retrieve(self) -> ReturnValue:
-        """
-        Call self.retrieve() with the identifier.
-        """
-        id = self.identify(self.__context)
-        return self.retrieve(id)
-
-    @abstractmethod
-    def save(self, identifier: Identifier, result: ReturnValue) -> None:
-        """
-        Save the result of the function based on the identifier.
-
-        Args:
-            identifier: Identifier of the function call
-            result: Return value of the function call
-        """
-        pass
-
-    def _call_save(self, result: ReturnValue) -> None:
-        """
-        Call self.save() with the identifier
-        """
-        id = self.identify(self.__context)
-        self.save(id, result)

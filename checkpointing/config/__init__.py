@@ -1,6 +1,5 @@
-from checkpointing.config.modules import HashConfig, CacheConfig
-
-
-class Config:
-    hash = HashConfig
-    cache = CacheConfig
+defaults = {
+    "cache.filesystem.directory": ".checkpointing",
+    "hash.algorithm": "md5",
+}
+"""Package-wise global dict for default value configurations"""
