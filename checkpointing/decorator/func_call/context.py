@@ -1,11 +1,11 @@
 import inspect
 from typing import List, Dict, Tuple, Callable
-from checkpointing._typing import ReturnValue
+from checkpointing.decorator.func_call._typing import ReturnValue
 
 
 class Context:
     """
-    Context providing information for a function call.
+    Context of information for a function call.
     """
 
     def __init__(self, func: Callable[... ,ReturnValue], args: Tuple, kwargs: Dict) -> None:
@@ -31,7 +31,7 @@ class Context:
     @property
     def arguments(self) -> Dict:
         """
-        Dictionary or OrderedDictionary of the function arguments and their actually applied parameter values in the function call.
+        Dictionary or OrderedDictionary (depending on the python version) of the function arguments and their actually applied parameter values in the function call.
 
         >>> def foo(a, b=1, c=None, d=4):
         ...     pass

@@ -5,8 +5,8 @@ from warnings import warn
 
 from checkpointing.exceptions import CheckpointNotExist, ExpensiveOverheadWarning, CheckpointFailedWarning
 from checkpointing.util.timing import Timer, timed_run
-from checkpointing._typing import ReturnValue
-from checkpointing.context.context import Context
+from checkpointing.decorator.func_call._typing import ReturnValue
+from checkpointing.decorator.func_call.context import Context
 from checkpointing.logging import logger
 
 
