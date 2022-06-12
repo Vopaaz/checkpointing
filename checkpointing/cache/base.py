@@ -42,26 +42,35 @@ class CacheBase(ABC, Generic[ContextId, ReturnValue]):
         """
         pass
 
-    def thread_synchronized(self) -> ThreadSafeCache:
+    def thread_synchronized(self) -> ThreadSynchronizedCache:
         """
         Returns:
             A thread-safe version of this cache - multiple threads won't attempt saving/retrieval concurrently.
         """
-        return ThreadSafeCache(self)
+        return ThreadSynchronizedCache(self)
 
-    def process_synchronized(self) -> ProcessSafeCache:
+    def process_synchronized(self) -> ProcessSynchronizedCache:
         """
         Returns:
             A process-safe version of this cache - multiple processes won't attempt saving/retrieval concurrently.
         """
-        return ProcessSafeCache(self)
+        return ProcessSynchronizedCache(self)
 
 
 CacheSubclass = TypeVar("CacheSubclass", bound=CacheBase)
 
 
-class ConcurrentSafeCache(CacheBase, Generic[CacheSubclass]):
+class SynchronizedCache(CacheBase, Generic[CacheSubclass]):
+    """
+    Base class for synchronized cache. In the constructor of a concrete subclass,
+    a `self.lock` attribute should be assigned as a thread/process lock, or any analog of such synchronization locks.
+    """
+
     lock: Union[ThreadLock, ProcessLock]
+
+    @abstractmethod
+    def __init__(self) -> None:
+        pass
 
     def save(self, context_id: ContextId, result: ReturnValue) -> None:
         with self.lock:
@@ -72,7 +81,7 @@ class ConcurrentSafeCache(CacheBase, Generic[CacheSubclass]):
             return self._cache.retrieve(context_id)
 
 
-class ThreadSafeCache(ConcurrentSafeCache):
+class ThreadSynchronizedCache(SynchronizedCache):
     """
     Wrapper around a given cache object that makes it's `save` and `retrieve` method synchronized for multithreading.
     """
@@ -86,7 +95,7 @@ class ThreadSafeCache(ConcurrentSafeCache):
         self.lock = ThreadLock()
 
 
-class ProcessSafeCache(CacheBase, Generic[CacheSubclass]):
+class ProcessSynchronizedCache(SynchronizedCache):
     """
     Wrapper around a given cache object that makes it's `save` and `retrieve` method synchronized for multiprocessing.
     """
@@ -96,5 +105,5 @@ class ProcessSafeCache(CacheBase, Generic[CacheSubclass]):
         Args:
             cache: the cache object to be made as "process safe"
         """
-        self.__cache = cache
+        self._cache = cache
         self.lock = ProcessLock()

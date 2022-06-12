@@ -1,4 +1,3 @@
-from checkpointing.decorator.base import HashDecoratorCheckpoint
 
 
 def checkpoint():
@@ -6,5 +5,5 @@ def checkpoint():
     return DefaultDecoratorCheckpoint()
 
 
-class DefaultDecoratorCheckpoint(HashDecoratorCheckpoint):
+class DefaultDecoratorCheckpoint:
     pass
