@@ -1,7 +1,6 @@
 import numpy as np
-from checkpointing.hash.primitives import hash_bytes
+from checkpointing.hash._typing import Hash
 
-
-def hash_numpy_array(obj: np.ndarray, algorithm: str = None) -> str:
-    bytes_data = obj.tobytes(order="C")
-    return hash_bytes(bytes_data, algorithm=algorithm)
+def hash_numpy_array(hash_base: Hash, arr: np.ndarray) -> Hash:
+    arr_bytes = arr.tobytes(order="C")
+    return hash_base.update(arr_bytes)
