@@ -23,9 +23,10 @@ from typing import Any
 from collections import defaultdict
 from checkpointing.hash.primitives import hash_object
 from checkpointing.config import defaults
+import pickle
 import hashlib
 
-hashers = defaultdict(lambda: hash_object)
+hashers = {}
 """
 Mapping of object classes to their corresponding hash functions implemented in the submodules.
 If a specific function does not exists, fallbacks to checkpointing.hash.primitives.hash_object
@@ -46,14 +47,17 @@ if "pandas" in sys.modules:
     hashers[pd.DataFrame] = hash_pandas_object
 
 
-def hash_anything(*objs: Any, algorithm=None) -> str:
+def hash_anything(*objs: Any, algorithm=None, pickle_protocol: int=pickle.DEFAULT_PROTOCOL) -> str:
     """
-    Hash the objects with the given algorithm.
-    If it's not specified, use the default in the global configuration (`defaults["hash.algorithm"]`)
+    Args:
+        objs: the objects to be hashed
+        algorithm: the hash algorithm. If it's not specified, use the default in the global configuration (`defaults["hash.algorithm"]`)
+        pickle_protocol: the pickle protocol to use for hashing objects that does not have an optimized hasher, 
+                            and thus using the pickle_based fallback hasher
 
     Returns: a hexdigest of the hash value
 
-    >>> hash_anything(0, "hello", [1, {"a": "b"}])
+    >>> hash_anything(0, "hello", [1, {"a": "b"}], pickle_protocol=3)
     '656b476a9f8fb668107c756113b38d89'
     """
 
@@ -63,7 +67,10 @@ def hash_anything(*objs: Any, algorithm=None) -> str:
     hash_base = hashlib.new(algorithm)
 
     for obj in objs:
-        hash_fn = hashers[type(obj)]
-        hash_fn(hash_base, obj)
+        if type(obj) in hashers:
+            hash_fn = hashers[type(obj)]
+            hash_fn(hash_base, obj)
+        else:
+            hash_object(hash_base, obj, pickle_protocol)
 
     return hash_base.hexdigest()
