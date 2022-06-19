@@ -77,7 +77,7 @@ class DecoratorCheckpoint(ABC, Generic[ReturnValue]):
             else:
                 logger.info(f"Result of {func.__qualname__}(**{self._context.arguments}) unavailable from cache")
 
-                res, run_time = timed_run(func, args, kwargs)
+                res, run_time = timed_run(func, *args, **kwargs)
 
                 save_time = self.__timed_safe_save(context_id, res)
                 logger.info(f"Result of {func.__qualname__}(**{self._context.arguments}) saved to cache")
@@ -94,7 +94,7 @@ class DecoratorCheckpoint(ABC, Generic[ReturnValue]):
 
             logger.info(f"Forcing rerun of {original_func.__qualname__}(**{self._context.arguments})")
 
-            res, run_time = timed_run(original_func, args, kwargs)
+            res, run_time = timed_run(original_func, *args, **kwargs)
 
             save_time = self.__timed_safe_save(context_id, res)
             logger.info(f"Result of {original_func.__qualname__}(**{self._context.arguments}) saved to cache")

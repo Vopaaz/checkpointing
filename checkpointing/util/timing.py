@@ -32,7 +32,7 @@ class Timer:
 
 ReturnValue = TypeVar("ReturnValue")
 
-def timed_run(func: Callable[..., ReturnValue], args: Tuple, kwargs: Dict) -> Tuple[ReturnValue, float]:
+def timed_run(func: Callable[..., ReturnValue], *args: Tuple, **kwargs: Dict) -> Tuple[ReturnValue, float]:
     """
     Run the function with the arguments, recording the run time.
 
