@@ -55,6 +55,13 @@ class DecoratorCheckpoint(ABC, Generic[ReturnValue]):
         """Magic method invoked when used as a decorator."""
         logger.debug(f"{self.__class__.__name__} created for {func.__qualname__}")
 
+        inner = self.__create_inner(func)
+
+        self.__bind_rerun(func, inner)
+
+        return inner
+
+    def __create_inner(self, func: Callable[..., ReturnValue]) -> Callable[..., ReturnValue]:
         @wraps(func)
         def inner(*args, **kwargs) -> ReturnValue:
 
@@ -79,6 +86,23 @@ class DecoratorCheckpoint(ABC, Generic[ReturnValue]):
                 return res
 
         return inner
+
+    def __bind_rerun(self, original_func: Callable[..., ReturnValue], inner_func: Callable[..., ReturnValue]) -> None:
+        def rerun(*args, **kwargs) -> ReturnValue:
+            context = Context(original_func, args, kwargs)
+            context_id = self.__identifier.identify(context)
+
+            logger.info(f"Forcing rerun of {original_func.__qualname__}(**{self._context.arguments})")
+
+            res, run_time = timed_run(original_func, args, kwargs)
+
+            save_time = self.__timed_safe_save(context_id, res)
+            logger.info(f"Result of {original_func.__qualname__}(**{self._context.arguments}) saved to cache")
+
+            self.__warn_if_more_expensive(save_time, run_time)
+            return res
+
+        inner_func.rerun = rerun
 
     def __warn_if_more_expensive(self, checkpoint_time: float, run_time: float, tol: float = 0.1) -> None:
         """
