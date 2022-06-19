@@ -1,3 +1,3 @@
-from decorator.func_call.identifier import FuncCallIdentifierBase, FuncCallHashIdentifier
-from decorator.default import checkpoint
-from decorator.base import DecoratorCheckpoint
+from checkpointing.decorator.func_call.identifier import FuncCallIdentifierBase, FuncCallHashIdentifier
+from checkpointing.decorator.default import checkpoint
+from checkpointing.decorator.base import DecoratorCheckpoint

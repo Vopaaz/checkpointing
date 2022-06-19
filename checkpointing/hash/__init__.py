@@ -5,6 +5,12 @@ The submodules under this module, such as checkpointing.hash.primitives, checkpo
 implements functions that gets the optimized binary representation of certain objects, and update a given
 hashlib._Hash instance. These methods are intended for in-module use only.
 
+>>> import hashlib
+>>> from checkpointing.hash.primitives import hash_bytes
+>>> base = hashlib.md5()
+>>> hash_bytes(base, b'abc').hexdigest()
+'900150983cd24fb0d6963f7d28e17f72'
+
 checkpointing.hash._typing is an exception. It only provides a typing analog of hashlib._Hash, which cannot
 be used directly.
 
@@ -42,6 +48,13 @@ if "pandas" in sys.modules:
 
 def hash_anything(*objs: Any, algorithm=None) -> str:
     """
+    Hash the objects with the given algorithm.
+    If it's not specified, use the default in the global configuration (`defaults["hash.algorithm"]`)
+
+    Returns: a hexdigest of the hash value
+
+    >>> hash_anything(0, "hello", [1, {"a": "b"}])
+    '656b476a9f8fb668107c756113b38d89'
     """
 
     if algorithm is None:
