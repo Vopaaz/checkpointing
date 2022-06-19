@@ -1,5 +1,5 @@
 from checkpointing.cache.base import CacheBase
-from checkpointing.decorator.func_call._typing import ReturnValue
+from checkpointing._typing import ReturnValue
 from checkpointing import defaults
 from checkpointing.exceptions import CheckpointNotExist
 import pathlib

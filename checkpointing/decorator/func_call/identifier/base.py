@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from checkpointing.decorator.func_call.context import Context
-from checkpointing.decorator.func_call._typing import ContextId
+from checkpointing._typing import ContextId
 
 
 class FuncCallIdentifierBase(ABC):

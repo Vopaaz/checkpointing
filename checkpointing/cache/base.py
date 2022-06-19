@@ -1,7 +1,7 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import Generic, TypeVar, Union
-from checkpointing.decorator.func_call._typing import ContextId, ReturnValue
+from checkpointing._typing import ContextId, ReturnValue
 from checkpointing.exceptions import CheckpointNotExist
 
 from threading import Lock as ThreadLock

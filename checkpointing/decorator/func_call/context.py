@@ -1,6 +1,6 @@
 import inspect
 from typing import List, Dict, Tuple, Callable
-from checkpointing.decorator.func_call._typing import ReturnValue
+from checkpointing._typing import ReturnValue
 
 
 class Context:
