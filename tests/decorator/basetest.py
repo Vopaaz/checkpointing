@@ -1,6 +1,6 @@
 import warnings
 
-from checkpointing.decorator.base import Context, DecoratorCheckpointBase
+from checkpointing.decorator.base import Context, DecoratorCheckpoint
 from checkpointing.exceptions import (
     CheckpointFailedError,
     CheckpointFailedWarning,
@@ -12,7 +12,7 @@ from time import sleep
 from warnings import catch_warnings
 
 
-class DummyDecoratorCheckpoint(DecoratorCheckpointBase):
+class DummyDecoratorCheckpoint(DecoratorCheckpoint):
     def retrieve(self, ctx: Context):
         return None
 
@@ -59,7 +59,7 @@ def test_context_compiles_correct_arguments():
     assert deco._context.arguments == expected
 
 
-class SlowRetrievalDecoratorCheckpoint(DecoratorCheckpointBase):
+class SlowRetrievalDecoratorCheckpoint(DecoratorCheckpoint):
     def retrieve(self, context: Context):
         sleep(0.1)
         raise CheckpointNotExist
@@ -81,7 +81,7 @@ def test_raise_warning_when_overhead_larger_than_computation():
         assert issubclass(w[0].category, ExpensiveOverheadWarning)
 
 
-class ErroneousDecoratorCheckpoint(DecoratorCheckpointBase):
+class ErroneousDecoratorCheckpoint(DecoratorCheckpoint):
     def retrieve(self, context: Context):
         raise RuntimeError
 

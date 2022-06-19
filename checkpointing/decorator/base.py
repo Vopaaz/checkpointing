@@ -5,48 +5,48 @@ from warnings import warn
 
 from checkpointing.exceptions import CheckpointNotExist, ExpensiveOverheadWarning, CheckpointFailedWarning
 from checkpointing.util.timing import Timer, timed_run
-from checkpointing.decorator.func_call._typing import ReturnValue
+from checkpointing.decorator.func_call._typing import ReturnValue, ContextId
 from checkpointing.decorator.func_call.context import Context
+from checkpointing.decorator.func_call.identifier import FuncCallHashIdentifier, FuncCallIdentifierBase
 from checkpointing.logging import logger
 
+from checkpointing.cache import CacheBase, PickleFileCache
 
-class DecoratorCheckpointBase(ABC, Generic[ReturnValue]):
+
+class DecoratorCheckpoint(ABC, Generic[ReturnValue]):
     """The base class for any decorator checkpoint."""
 
-    def __init__(self, error: str = "warn") -> None:
+    def __init__(self, identifier: FuncCallIdentifierBase, cache: CacheBase, error: str = "warn") -> None:
         """
         Args:
+            identifier: the function call identifier that creates an ID for the function call context
+            cache: the cache instance that saves and reads the return value with the given ID
             error: the behavior when retrieval or saving raises unexpected exceptions
-                (exceptions other than checkpointing.CheckpointNotExist).
-                Could be:
+                (exceptions other than checkpointing.CheckpointNotExist). Possible values are:
                 - `"raise"`, the exception will be raised.
                 - `"warn"`, a warning will be issued to inform that the checkpointing task has failed.
                     But the user function will be invoked and executed as if it wasn't checkpointed.
                 - `"ignore"`, the exception will be ignored and the user function will be invoked and executed normally.
-
-        To implement a concrete class of DecoratorCheckpoint, you need to implement the following abstract methods:
-            - `save(self, context: Context, result: ReturnValue) -> None`
-            - `retrieve(self, context: Context)`
-
-        By default, function call contexts are passed as the parameters of the above functions, as indicated by their signatures.
-        However, in some cases, if you want to define an abstract subclass that have different behavior, you can also rewrite
-        the following methods that calls `save`/`retrieve` with different parameters
-            - `_call_save(self, result: ReturnValue) -> None`
-            - `_call_retrieve(self) -> None`
-
-        In these methods, you can access `self._context` for the latest function call context, and supply the `save` and `retrieve`
-        methods with more intuitive parameters that have already been preprocessed by the other functions.
         """
+
+        self.__identifier = identifier
+        """The function call identifier"""
+
+        self.__cache = cache
+        """The cache instance"""
 
         self.__error: str = error
         """The behavior when identification, saving or retrieval raises unexpected exceptions."""
 
-        self._context: Context = None
-        """The context of the latest function call"""
-
         self.__validate_params()
 
     def __validate_params(self):
+        if isinstance(self.__identifier, FuncCallIdentifierBase):
+            raise ValueError(f"Invalid type for identifier: {type(self.__identifier)}")
+
+        if isinstance(self.__cache, CacheBase):
+            raise ValueError(f"Invalid type for cache: {type(self.__cache)}")
+
         error = ["raise", "warn", "ignore"]
         if self.__error not in error:
             raise ValueError(f"Invalid argument value for error: {self.__error}, must be one of {error}")
@@ -57,17 +57,24 @@ class DecoratorCheckpointBase(ABC, Generic[ReturnValue]):
 
         @wraps(func)
         def inner(*args, **kwargs) -> ReturnValue:
-            self._context = Context(func, args, kwargs)
 
-            retrieve_success, res, retrieve_time = self.__timed_safe_retrieve()
+            context = Context(func, args, kwargs)
+            context_id = self.__identifier.identify(context)
+
+            retrieve_success, res, retrieve_time = self.__timed_safe_retrieve(context_id)
+
             if retrieve_success:
                 logger.info(f"Result of {func.__qualname__}(**{self._context.arguments}) retrieved from cache")
                 return res
+
             else:
                 logger.info(f"Result of {func.__qualname__}(**{self._context.arguments}) unavailable from cache")
+
                 res, run_time = timed_run(func, args, kwargs)
-                save_time = self.__timed_safe_save(res)
+
+                save_time = self.__timed_safe_save(context_id, res)
                 logger.info(f"Result of {func.__qualname__}(**{self._context.arguments}) saved to cache")
+
                 self.__warn_if_more_expensive(retrieve_time + save_time, run_time)
                 return res
 
@@ -94,31 +101,9 @@ class DecoratorCheckpointBase(ABC, Generic[ReturnValue]):
                 stacklevel=3,
             )
 
-    @abstractmethod
-    def retrieve(self, context: Context) -> ReturnValue:
+    def __timed_safe_retrieve(self, context_id: ContextId) -> Tuple[bool, ReturnValue, float]:
         """
-        Retrieve the data based on the function call context.
-        If the there is no corresponding previously saved results, raise a `checkpointing.CheckpointNotExist`.
-
-        Args:
-            context: Context of the function call
-
-        Returns:
-            The retrieved return value of the function call.
-        """
-        pass
-
-    def _call_retrieve(self) -> ReturnValue:
-        """
-        Call `self.retrieve()` with correct parameters.
-
-        Overwrite this method to create abstract subclasses that needs different parameters for retrieving the result.
-        """
-        return self.retrieve(self._context)
-
-    def __timed_safe_retrieve(self) -> Tuple[bool, ReturnValue, float]:
-        """
-        Retrive the cached result, tracking the time and capturing any error,
+        Retrieve the cached result, tracking the time and capturing any error,
         dealing with them according to the level specified by `self.__error`
 
         Returns:
@@ -130,10 +115,12 @@ class DecoratorCheckpointBase(ABC, Generic[ReturnValue]):
 
         timer = Timer().start()
         try:
-            res = self._call_retrieve()
+            res = self.__cache.retrieve(context_id)
             return True, res, timer.time
+
         except CheckpointNotExist:
             return False, None, timer.time
+
         except Exception as e:
             self.__handle_unexpected_error(e)
             return False, None, timer.time
@@ -148,34 +135,18 @@ class DecoratorCheckpointBase(ABC, Generic[ReturnValue]):
         """
         if self.__error == "raise":
             raise error
+
         elif self.__error == "warn":
             warn(
                 f"Checkpointing for {self._context.function_name} failed because of the following error: {str(error)}. "
                 "The function is called to compute the return value.",
                 CheckpointFailedWarning,
             )
+
         else:  # self.__error == "ignore"
             pass
 
-    @abstractmethod
-    def save(self, context: Context, result: ReturnValue) -> None:
-        """
-        Save the result for the function call context.
-
-        Args:
-            context: Context of the function call
-        """
-        pass
-
-    def _call_save(self, result: ReturnValue) -> None:
-        """
-        Call `self.save()` with correct parameters.
-
-        Overwrite this method to create abstract subclasses that needs different parameters for saving the result.
-        """
-        return self.save(self._context, result)
-
-    def __timed_safe_save(self, result: ReturnValue) -> float:
+    def __timed_safe_save(self, context_id: ContextId, result: ReturnValue) -> float:
         """
         Save the result, tracking the time and capturing any error,
         dealing with them according to the level specified by `self.__error`
@@ -186,9 +157,9 @@ class DecoratorCheckpointBase(ABC, Generic[ReturnValue]):
 
         timer = Timer().start()
         try:
-            self._call_save(result)
+            self.__cache.save(context_id, result)
+
         except Exception as e:
             self.__handle_unexpected_error(e)
 
         return timer.time
-
