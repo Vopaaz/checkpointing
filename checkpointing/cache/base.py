@@ -42,68 +42,32 @@ class CacheBase(ABC, Generic[ContextId, ReturnValue]):
         """
         pass
 
-    def thread_synchronized(self) -> ThreadSynchronizedCache:
-        """
-        Returns:
-            A thread-safe version of this cache - multiple threads won't attempt saving/retrieval concurrently.
-        """
-        return ThreadSynchronizedCache(self)
-
-    def process_synchronized(self) -> ProcessSynchronizedCache:
+    def synchronize_with(self, lock) -> SynchronizedCache:
         """
         Returns:
             A process-safe version of this cache - multiple processes won't attempt saving/retrieval concurrently.
         """
-        return ProcessSynchronizedCache(self)
+        return SynchronizedCache(self, lock)
 
 
 CacheSubclass = TypeVar("CacheSubclass", bound=CacheBase)
 
 
-class SynchronizedCache(CacheBase, Generic[CacheSubclass]):
+# Exclude this class from the coverage report because nosetests have weird behavior in multiprocessing
+class SynchronizedCache(CacheBase, Generic[CacheSubclass]): # pragma: no cover
     """
     Base class for synchronized cache. In the constructor of a concrete subclass,
     a `self.lock` attribute should be assigned as a thread/process lock, or any analog of such synchronization locks.
     """
 
-    lock: Union[ThreadLock, ProcessLock]
-
-    @abstractmethod
-    def __init__(self) -> None:
-        pass
+    def __init__(self, cache, lock) -> None:
+        self.__cache = cache
+        self.__lock = lock
 
     def save(self, context_id: ContextId, result: ReturnValue) -> None:
-        with self.lock:
-            self._cache.save(context_id, result)
+        with self.__lock:
+            self.__cache.save(context_id, result)
 
     def retrieve(self, context_id: ContextId) -> ReturnValue:
-        with self.lock:
-            return self._cache.retrieve(context_id)
-
-
-class ThreadSynchronizedCache(SynchronizedCache):
-    """
-    Wrapper around a given cache object that makes it's `save` and `retrieve` method synchronized for multithreading.
-    """
-
-    def __init__(self, cache: CacheSubclass) -> None:
-        """
-        Args:
-            cache: the cache object to be made as thread safe
-        """
-        self._cache = cache
-        self.lock = ThreadLock()
-
-
-class ProcessSynchronizedCache(SynchronizedCache):
-    """
-    Wrapper around a given cache object that makes it's `save` and `retrieve` method synchronized for multiprocessing.
-    """
-
-    def __init__(self, cache: CacheSubclass) -> None:
-        """
-        Args:
-            cache: the cache object to be made as "process safe"
-        """
-        self._cache = cache
-        self.lock = ProcessLock()
+        with self.__lock:
+            return self.__cache.retrieve(context_id)

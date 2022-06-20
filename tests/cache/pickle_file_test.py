@@ -1,21 +1,10 @@
 from checkpointing import defaults
-import pathlib
 import shutil
 from checkpointing.cache.pickle_file import PickleFileCache, CheckpointNotExist
 from nose import with_setup
 from nose.tools import raises
 import pickle
-
-tmpdir = pathlib.Path(".checkpointing-unit-test-tmp")
-
-
-def teardown_module():
-    rmdir_func()
-
-
-def rmdir_func():
-    if tmpdir.exists():
-        shutil.rmtree(tmpdir)
+from tests.cache.testutils import rmdir_func, tmpdir
 
 
 @with_setup(setup=rmdir_func)
