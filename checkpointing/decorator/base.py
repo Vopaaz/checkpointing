@@ -3,7 +3,7 @@ from functools import wraps
 from typing import Callable, Dict, Generic, List, Tuple, TypeVar
 from warnings import warn
 
-from checkpointing.exceptions import CheckpointNotExist, ExpensiveOverheadWarning, CheckpointFailedWarning
+from checkpointing.exceptions import CheckpointNotExist, ExpensiveOverheadWarning, CheckpointFailedWarning, CheckpointFailedError
 from checkpointing.util.timing import Timer, timed_run
 from checkpointing._typing import ReturnValue, ContextId
 from checkpointing.decorator.func_call.context import Context
@@ -68,7 +68,7 @@ class DecoratorCheckpoint(ABC, Generic[ReturnValue]):
             context = Context(func, args, kwargs)
             context_id = self.__identifier.identify(context)
 
-            retrieve_success, res, retrieve_time = self.__timed_safe_retrieve(context_id)
+            retrieve_success, res, retrieve_time = self.__timed_safe_retrieve(context, context_id)
 
             if retrieve_success:
                 logger.info(f"Result of {func.__qualname__}(**{context.arguments}) retrieved from cache")
@@ -79,10 +79,10 @@ class DecoratorCheckpoint(ABC, Generic[ReturnValue]):
 
                 res, run_time = timed_run(func, *args, **kwargs)
 
-                save_time = self.__timed_safe_save(context_id, res)
+                save_time = self.__timed_safe_save(context, context_id, res)
                 logger.info(f"Result of {func.__qualname__}(**{context.arguments}) saved to cache")
 
-                self.__warn_if_more_expensive(retrieve_time + save_time, run_time)
+                self.__warn_if_more_expensive(context, retrieve_time + save_time, run_time)
                 return res
 
         return inner
@@ -96,15 +96,15 @@ class DecoratorCheckpoint(ABC, Generic[ReturnValue]):
 
             res, run_time = timed_run(original_func, *args, **kwargs)
 
-            save_time = self.__timed_safe_save(context_id, res)
+            save_time = self.__timed_safe_save(context, context_id, res)
             logger.info(f"Result of {original_func.__qualname__}(**{context.arguments}) saved to cache")
 
-            self.__warn_if_more_expensive(save_time, run_time)
+            self.__warn_if_more_expensive(context, save_time, run_time)
             return res
 
         inner_func.rerun = rerun
 
-    def __warn_if_more_expensive(self, checkpoint_time: float, run_time: float, tol: float = 0.1) -> None:
+    def __warn_if_more_expensive(self, context: Context, checkpoint_time: float, run_time: float, tol: float = 0.1) -> None:
         """
         Warn the user if retrieval takes longer than running the function.
 
@@ -118,14 +118,14 @@ class DecoratorCheckpoint(ABC, Generic[ReturnValue]):
 
         if checkpoint_time > run_time + tol:
             warn(
-                f"The overhead for checkpointing '{self._context.function_name}' could possibly take more time than the function call itself "
+                f"The overhead for checkpointing '{context.function_name}' could possibly take more time than the function call itself "
                 f"({checkpoint_time:.2f}s > {run_time:.2f}s). "
                 "Consider optimize the checkpoint or just remove it, and let the function execute every time.",
                 category=ExpensiveOverheadWarning,
                 stacklevel=3,
             )
 
-    def __timed_safe_retrieve(self, context_id: ContextId) -> Tuple[bool, ReturnValue, float]:
+    def __timed_safe_retrieve(self, context: Context, context_id: ContextId) -> Tuple[bool, ReturnValue, float]:
         """
         Retrieve the cached result, tracking the time and capturing any error,
         dealing with them according to the level specified by `self.__error`
@@ -146,10 +146,10 @@ class DecoratorCheckpoint(ABC, Generic[ReturnValue]):
             return False, None, timer.time
 
         except Exception as e:
-            self.__handle_unexpected_error(e)
+            self.__handle_unexpected_error(context, e)
             return False, None, timer.time
 
-    def __handle_unexpected_error(self, error: Exception):
+    def __handle_unexpected_error(self, context: Context, error: Exception):
         """
         Handle the unexpected error according to the level specified by `self.__error`.
 
@@ -158,11 +158,11 @@ class DecoratorCheckpoint(ABC, Generic[ReturnValue]):
                     It should be dealt within the saving/retrieving methods.
         """
         if self.__error == "raise":
-            raise error
+            raise CheckpointFailedError(f"Checkpointing for {context.function_name} failed because of the following error: {str(error)}", error)
 
         elif self.__error == "warn":
             warn(
-                f"Checkpointing for {self._context.function_name} failed because of the following error: {str(error)}. "
+                f"Checkpointing for {context.function_name} failed because of the following error: {str(error)}. "
                 "The function is called to compute the return value.",
                 CheckpointFailedWarning,
             )
@@ -170,7 +170,7 @@ class DecoratorCheckpoint(ABC, Generic[ReturnValue]):
         else:  # self.__error == "ignore"
             pass
 
-    def __timed_safe_save(self, context_id: ContextId, result: ReturnValue) -> float:
+    def __timed_safe_save(self, context: Context, context_id: ContextId, result: ReturnValue) -> float:
         """
         Save the result, tracking the time and capturing any error,
         dealing with them according to the level specified by `self.__error`
@@ -184,6 +184,6 @@ class DecoratorCheckpoint(ABC, Generic[ReturnValue]):
             self.__cache.save(context_id, result)
 
         except Exception as e:
-            self.__handle_unexpected_error(e)
+            self.__handle_unexpected_error(context, e)
 
         return timer.time

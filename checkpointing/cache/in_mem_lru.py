@@ -19,6 +19,8 @@ class InMemoryLRUCache(CacheBase):
        should be much faster and is thus recommended to use. However, this might be useful in some cases, For
        example, ignoring some parameters on purpose. In such case you could use a custom identifier together
        with this cache.
+    4. If using in multiprocessing, this is not a shared memory object, so the cache will not be shared between
+       multiple processes
     """
 
     def __init__(self, maxsize=None) -> None:
