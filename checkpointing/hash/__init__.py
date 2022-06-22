@@ -25,6 +25,10 @@ from checkpointing.hash.primitives import hash_object
 from checkpointing.config import defaults
 import pickle
 import hashlib
+from importlib.util import find_spec
+
+def is_installed(module_name):
+    return find_spec(module_name)
 
 hashers = {}
 """
@@ -32,14 +36,14 @@ Mapping of object classes to their corresponding hash functions implemented in t
 If a specific function does not exists, fallbacks to checkpointing.hash.primitives.hash_object
 """
 
-if "numpy" in sys.modules:
+if is_installed("numpy"):
     import numpy as np
     from checkpointing.hash._numpy import hash_numpy_array
 
     hashers[np.ndarray] = hash_numpy_array
 
 
-if "pandas" in sys.modules:
+if is_installed("pandas"):
     import pandas as pd
     from checkpointing.hash._pandas import hash_pandas_object
 
