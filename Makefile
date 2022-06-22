@@ -9,4 +9,4 @@ test:
 			  --cover-html-dir=.html-coverage \
 			  --with-doctest \
 			  tests/**/*.py \
-			  checkpointing/**/*.py
+			  checkpointing

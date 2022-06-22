@@ -36,7 +36,7 @@ jobs:
         run: python -m tests.cache.synchronization_test
 
       - name: Run tests
-        run: nosetests --with-coverage --cover-xml --cover-package=checkpointing --with-doctest tests/**/*.py checkpointing/**/*.py
+        run: nosetests --with-coverage --cover-xml --cover-package=checkpointing --with-doctest tests/**/*.py checkpointing
 
       - name: "Upload coverage to Codecov"
         uses: codecov/codecov-action@v2

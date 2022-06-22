@@ -8,7 +8,7 @@ class Context:
     Context of information for a function call.
     """
 
-    def __init__(self, func: Callable[... ,ReturnValue], args: Tuple, kwargs: Dict) -> None:
+    def __init__(self, func: Callable[..., ReturnValue], args: Tuple, kwargs: Dict) -> None:
         """
         Args:
             args: the non-keywords arguments of the function call
@@ -58,9 +58,9 @@ class Context:
         >>> # Equivalent to the context computed for: foo()
         >>> ctx = Context(foo, (), {})
         >>>
-        >>> # foo is defined in checkpointing/decorator/context.py
+        >>> # foo is defined in checkpointing/decorator/func_call/context.py
         >>> ctx.function_name
-        'checkpointing.decorator.context.foo'
+        'checkpointing.decorator.func_call.context.foo'
         """
         return ".".join([self.__func.__module__, self.__func.__qualname__])
 
@@ -83,3 +83,19 @@ class Context:
 
         sourcelines, _ = inspect.getsourcelines(self.__func)
         return "".join(sourcelines[1:])
+
+    @property
+    def local_variables(self) -> Tuple[str]:
+        """
+        The names of local variables and parameter names in the function.
+
+        >>> def foo(a, b):
+        ...     c = a + b
+        ...     return c
+        >>>
+        >>> ctx = Context(foo, (1, 2), {})
+        >>> ctx.local_variables
+        ('a', 'b', 'c')
+        """
+
+        return self.__func.__code__.co_varnames
