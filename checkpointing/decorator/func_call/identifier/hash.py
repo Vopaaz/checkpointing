@@ -25,7 +25,7 @@ class FuncCallHashIdentifier(FuncCallIdentifierBase):
         """
 
         param_name_values = []
-        for k, v in context.arguments.values():
+        for k, v in context.arguments.items():
             param_name_values.append(k)
             param_name_values.append(v)
 

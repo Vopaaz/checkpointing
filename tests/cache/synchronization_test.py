@@ -9,7 +9,7 @@ therefore we only test multiprocessing.
 from checkpointing.cache import CacheBase, PickleFileCache
 from checkpointing import ContextId, ReturnValue, CheckpointNotExist
 
-from tests.cache.testutils import tmpdir, rmdir_func
+from tests.testutils import tmpdir, rmdir_func
 
 import os
 from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor, wait

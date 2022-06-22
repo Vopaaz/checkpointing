@@ -4,7 +4,7 @@ from checkpointing.cache.pickle_file import PickleFileCache, CheckpointNotExist
 from nose import with_setup
 from nose.tools import raises
 import pickle
-from tests.cache.testutils import rmdir_func, tmpdir
+from tests.testutils import rmdir_func, tmpdir
 
 
 @with_setup(setup=rmdir_func)

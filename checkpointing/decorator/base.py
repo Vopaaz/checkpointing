@@ -41,10 +41,10 @@ class DecoratorCheckpoint(ABC, Generic[ReturnValue]):
         self.__validate_params()
 
     def __validate_params(self):
-        if isinstance(self.__identifier, FuncCallIdentifierBase):
+        if not isinstance(self.__identifier, FuncCallIdentifierBase):
             raise ValueError(f"Invalid type for identifier: {type(self.__identifier)}")
 
-        if isinstance(self.__cache, CacheBase):
+        if not isinstance(self.__cache, CacheBase):
             raise ValueError(f"Invalid type for cache: {type(self.__cache)}")
 
         error = ["raise", "warn", "ignore"]
@@ -71,16 +71,16 @@ class DecoratorCheckpoint(ABC, Generic[ReturnValue]):
             retrieve_success, res, retrieve_time = self.__timed_safe_retrieve(context_id)
 
             if retrieve_success:
-                logger.info(f"Result of {func.__qualname__}(**{self._context.arguments}) retrieved from cache")
+                logger.info(f"Result of {func.__qualname__}(**{context.arguments}) retrieved from cache")
                 return res
 
             else:
-                logger.info(f"Result of {func.__qualname__}(**{self._context.arguments}) unavailable from cache")
+                logger.info(f"Result of {func.__qualname__}(**{context.arguments}) unavailable from cache")
 
                 res, run_time = timed_run(func, *args, **kwargs)
 
                 save_time = self.__timed_safe_save(context_id, res)
-                logger.info(f"Result of {func.__qualname__}(**{self._context.arguments}) saved to cache")
+                logger.info(f"Result of {func.__qualname__}(**{context.arguments}) saved to cache")
 
                 self.__warn_if_more_expensive(retrieve_time + save_time, run_time)
                 return res
@@ -92,12 +92,12 @@ class DecoratorCheckpoint(ABC, Generic[ReturnValue]):
             context = Context(original_func, args, kwargs)
             context_id = self.__identifier.identify(context)
 
-            logger.info(f"Forcing rerun of {original_func.__qualname__}(**{self._context.arguments})")
+            logger.info(f"Forcing rerun of {original_func.__qualname__}(**{context.arguments})")
 
             res, run_time = timed_run(original_func, *args, **kwargs)
 
             save_time = self.__timed_safe_save(context_id, res)
-            logger.info(f"Result of {original_func.__qualname__}(**{self._context.arguments}) saved to cache")
+            logger.info(f"Result of {original_func.__qualname__}(**{context.arguments}) saved to cache")
 
             self.__warn_if_more_expensive(save_time, run_time)
             return res
