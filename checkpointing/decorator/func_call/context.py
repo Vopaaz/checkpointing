@@ -71,14 +71,14 @@ class Context:
         formatted as-is, including any comments.
 
         >>> def foo(a, b):
-        ...     c = a + b # add a and b
+        ...     c = a + b  # add a and b
         ...     return c
         >>>
         >>> # Equivalent to the context computed for: foo(1, 2)
         >>> ctx = Context(foo, (1, 2), {})
         >>>
         >>> ctx.function_code
-        '    c = a + b # add a and b\n    return c\n'
+        '    c = a + b  # add a and b\n    return c\n'
         """
 
         sourcelines, _ = inspect.getsourcelines(self.__func)
