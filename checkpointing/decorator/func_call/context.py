@@ -67,7 +67,7 @@ class Context:
     @property
     def function_code(self) -> str:
         r"""
-        The source code body of the function, ignoring the function signature,
+        The source code of the function, including the function signature,
         formatted as-is, including any comments.
 
         >>> def foo(a, b):
@@ -78,11 +78,10 @@ class Context:
         >>> ctx = Context(foo, (1, 2), {})
         >>>
         >>> ctx.function_code
-        '    c = a + b  # add a and b\n    return c\n'
+        'def foo(a, b):\n    c = a + b  # add a and b\n    return c\n'
         """
 
-        sourcelines, _ = inspect.getsourcelines(self.__func)
-        return "".join(sourcelines[1:])
+        return inspect.getsource(self.__func)
 
     @property
     def local_variables(self) -> Tuple[str]:
@@ -96,6 +95,18 @@ class Context:
         >>> ctx = Context(foo, (1, 2), {})
         >>> ctx.local_variables
         ('a', 'b', 'c')
+
+        Note that, if a variable was firstly global then assigned a local value, it's still included.
+
+        >>> from collections import deque
+        >>>
+        >>> def bar():
+        ...     a = deque() # The right hand side is actually not a local variable
+        ...     deque = 1   # But it's converted to a local variable here
+        >>>
+        >>> ctx = Context(bar, (), {})
+        >>> ctx.local_variables
+        ('deque', 'a')
         """
 
         return self.__func.__code__.co_varnames
