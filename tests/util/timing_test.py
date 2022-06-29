@@ -5,10 +5,10 @@ from time import sleep
 
 def test_timed_run_returns_correct_time():
     def foo():
-        sleep(0.1)
+        sleep(1)
 
     _, time = timed_run(foo)
-    assert 0.08 <= time <= 0.12
+    assert 0.8 <= time <= 1.2
 
 
 def test_timed_run_returns_correct_result():
