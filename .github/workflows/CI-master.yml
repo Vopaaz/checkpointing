@@ -3,10 +3,10 @@ name: Unit Testing on Merge or commit to master
 on:
   push:
     branches:
-      - main
+      - master
   pull_request:
     branches:
-      - main
+      - master
 
 jobs:
   build:
