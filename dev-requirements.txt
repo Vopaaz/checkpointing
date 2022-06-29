@@ -1,0 +1,10 @@
+# Build or testing tools
+
+pdoc==8.0.1
+nose==1.3.7
+coverage==6.2
+
+# External hashing library
+
+numpy==1.21.5
+pandas==1.3.5
