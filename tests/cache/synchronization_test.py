@@ -42,25 +42,6 @@ def run_100_save(cache: CacheBase):
 
 
 @nottest  # nosetests have weird behavior for multiprocessing. This test is invoked directly from the CI script.
-def test_multiprocessing_safe_pre_check():  # Show that this setup indeed cause unsafety
-    rmdir_func()
-
-    unsafe_cache = IncrementalFileCache(tmpdir)
-
-    futures = []
-    with ProcessPoolExecutor() as e:
-        for _ in range(10):
-            f = e.submit(run_100_save, unsafe_cache)
-            futures.append(f)
-
-        wait(futures)
-
-    assert 0 < unsafe_cache.retrieve("0") < 100
-
-    rmdir_func()
-
-
-@nottest  # nosetests have weird behavior for multiprocessing. This test is invoked directly from the CI script.
 def test_multiprocessing_safe():
     rmdir_func()
     unsafe_cache = IncrementalFileCache(tmpdir)
@@ -81,5 +62,4 @@ def test_multiprocessing_safe():
 
 
 if __name__ == "__main__":
-    test_multiprocessing_safe_pre_check()
     test_multiprocessing_safe()
