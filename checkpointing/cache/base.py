@@ -44,8 +44,11 @@ class CacheBase(ABC, Generic[ContextId, ReturnValue]):
 
     def synchronize_with(self, lock) -> SynchronizedCache:
         """
+        Args:
+            lock: the Lock object that supports the similar protocol as threading/multiprocessing.Lock()
+
         Returns:
-            A process-safe version of this cache - multiple processes won't attempt saving/retrieval concurrently.
+            A process-safe version of this cache using the given lock.
         """
         return SynchronizedCache(self, lock)
 

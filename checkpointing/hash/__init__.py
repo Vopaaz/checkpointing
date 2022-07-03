@@ -55,9 +55,10 @@ def hash_anything(*objs: Any, algorithm=None, pickle_protocol: int=pickle.DEFAUL
     """
     Args:
         objs: the objects to be hashed
-        algorithm: the hash algorithm. If it's not specified, use the default in the global configuration (`defaults["hash.algorithm"]`)
+        algorithm: the hash algorithm. Must be supported by the hashlib.
+                   If it's not specified, use the global default `hash.algorithm`.
         pickle_protocol: the pickle protocol to use for hashing objects that does not have an optimized hasher, 
-                            and thus using the pickle_based fallback hasher
+                         and thus using the pickle_based fallback hasher
 
     Returns: a hexdigest of the hash value
 

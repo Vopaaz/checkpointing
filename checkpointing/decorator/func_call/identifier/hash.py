@@ -5,12 +5,13 @@ from checkpointing._typing import ContextId
 from checkpointing.hash import hash_anything
 
 
-class FuncCallHashIdentifier(FuncCallIdentifierBase):
-    def __init__(self, algorithm: str = None) -> None:
+class AutoHashIdentifier(FuncCallIdentifierBase):
+    def __init__(self, algorithm: str = None, pickle_protocol: int = None) -> None:
         """
         Args:
-            algorithm: the hash algorithm to use. If None, use the default value
-                        in the global configuration (`defaults["hash.algorithm"]`).
+            algorithm: the hash algorithm to use. If None, use the global default `hash.algorithm`.
+            pickle_protocol: the pickle protocol to use. If None, use the global default
+                             `hash.pickle_protocol`
         """
         self.algorithm = algorithm
 

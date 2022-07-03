@@ -7,7 +7,7 @@ from checkpointing.exceptions import CheckpointNotExist, ExpensiveOverheadWarnin
 from checkpointing.util.timing import Timer, timed_run
 from checkpointing._typing import ReturnValue, ContextId
 from checkpointing.decorator.func_call.context import Context
-from checkpointing.decorator.func_call.identifier import FuncCallHashIdentifier, FuncCallIdentifierBase
+from checkpointing.decorator.func_call.identifier import AutoHashIdentifier, FuncCallIdentifierBase
 from checkpointing.logging import logger
 
 from checkpointing.cache import CacheBase, PickleFileCache
@@ -16,17 +16,18 @@ from checkpointing.cache import CacheBase, PickleFileCache
 class DecoratorCheckpoint(ABC, Generic[ReturnValue]):
     """The base class for any decorator checkpoint."""
 
-    def __init__(self, identifier: FuncCallIdentifierBase, cache: CacheBase, error: str = "warn") -> None:
+    def __init__(self, identifier: FuncCallIdentifierBase, cache: CacheBase, on_error: str = None) -> None:
         """
         Args:
             identifier: the function call identifier that creates an ID for the function call context
             cache: the cache instance that saves and reads the return value with the given ID
-            error: the behavior when retrieval or saving raises unexpected exceptions
+            on_error: the behavior when retrieval or saving raises unexpected exceptions
                 (exceptions other than checkpointing.CheckpointNotExist). Possible values are:
                 - `"raise"`, the exception will be raised.
                 - `"warn"`, a warning will be issued to inform that the checkpointing task has failed.
                     But the user function will be invoked and executed as if it wasn't checkpointed.
                 - `"ignore"`, the exception will be ignored and the user function will be invoked and executed normally.
+                If None, use the global default `checkpoint.on_error`.
         """
 
         self.__identifier = identifier
@@ -35,7 +36,7 @@ class DecoratorCheckpoint(ABC, Generic[ReturnValue]):
         self.__cache = cache
         """The cache instance"""
 
-        self.__error: str = error
+        self.__on_error: str = on_error
         """The behavior when identification, saving or retrieval raises unexpected exceptions."""
 
         self.__validate_params()
@@ -48,8 +49,8 @@ class DecoratorCheckpoint(ABC, Generic[ReturnValue]):
             raise ValueError(f"Invalid type for cache: {type(self.__cache)}")
 
         error = ["raise", "warn", "ignore"]
-        if self.__error not in error:
-            raise ValueError(f"Invalid argument value for error: {self.__error}, must be one of {error}")
+        if self.__on_error not in error:
+            raise ValueError(f"Invalid argument value for error: {self.__on_error}, must be one of {error}")
 
     def __call__(self, func: Callable[..., ReturnValue]) -> Callable[..., ReturnValue]:
         """Magic method invoked when used as a decorator."""
@@ -128,7 +129,7 @@ class DecoratorCheckpoint(ABC, Generic[ReturnValue]):
     def __timed_safe_retrieve(self, context: Context, context_id: ContextId) -> Tuple[bool, ReturnValue, float]:
         """
         Retrieve the cached result, tracking the time and capturing any error,
-        dealing with them according to the level specified by `self.__error`
+        dealing with them according to the level specified by `self.__on_error`
 
         Returns:
             A tuple of three elements:
@@ -151,29 +152,29 @@ class DecoratorCheckpoint(ABC, Generic[ReturnValue]):
 
     def __handle_unexpected_error(self, context: Context, error: Exception):
         """
-        Handle the unexpected error according to the level specified by `self.__error`.
+        Handle the unexpected error according to the level specified by `self.__on_error`.
 
         Args:
             error: the raised exception. Note that checkpointing.exceptions.CheckpointNotExist should NOT be handled by this method.
                     It should be dealt within the saving/retrieving methods.
         """
-        if self.__error == "raise":
+        if self.__on_error == "raise":
             raise CheckpointFailedError(f"Checkpointing for {context.function_name} failed because of the following error: {str(error)}", error)
 
-        elif self.__error == "warn":
+        elif self.__on_error == "warn":
             warn(
                 f"Checkpointing for {context.function_name} failed because of the following error: {str(error)}. "
                 "The function is called to compute the return value.",
                 CheckpointFailedWarning,
             )
 
-        else:  # self.__error == "ignore"
+        else:  # self.__on_error == "ignore"
             pass
 
     def __timed_safe_save(self, context: Context, context_id: ContextId, result: ReturnValue) -> float:
         """
         Save the result, tracking the time and capturing any error,
-        dealing with them according to the level specified by `self.__error`
+        dealing with them according to the level specified by `self.__on_error`
 
         Returns:
             the time (seconds) it takes to save the result
