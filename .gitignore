@@ -131,3 +131,5 @@ docs
 
 .vscode
 .html-coverage
+.checkpointing-unit-test-tmp/
+.xml-coverage

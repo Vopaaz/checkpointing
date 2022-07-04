@@ -9,12 +9,11 @@ therefore we only test multiprocessing.
 from checkpointing.cache import CacheBase, PickleFileCache
 from checkpointing import ContextId, ReturnValue, CheckpointNotExist
 
-from tests.testutils import tmpdir, rmdir_func
+from tests.testutils import tmpdir, rmdir_before, rmdir_after
 
 import os
 from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor, wait
 import multiprocessing
-from nose.tools import nottest
 
 
 class IncrementalFileCache(PickleFileCache):
@@ -41,9 +40,8 @@ def run_100_save(cache: CacheBase):
         cache.save("0", 0)
 
 
-@nottest  # nosetests have weird behavior for multiprocessing. This test is invoked directly from the CI script.
-def test_multiprocessing_safe():
-    rmdir_func()
+def test_multiprocessing_safe(rmdir_before, rmdir_after):
+
     unsafe_cache = IncrementalFileCache(tmpdir)
     lock = multiprocessing.Manager().Lock()
     safe_cache = unsafe_cache.synchronize_with(lock)
@@ -58,8 +56,3 @@ def test_multiprocessing_safe():
 
     assert safe_cache.retrieve("0") == 100
 
-    rmdir_func()
-
-
-if __name__ == "__main__":
-    test_multiprocessing_safe()

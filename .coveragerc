@@ -1,6 +1,7 @@
 [run]
 branch = True
 source = checkpointing/
+data_file = ./.coverage/.coverage
 
 [report]
 exclude_lines =

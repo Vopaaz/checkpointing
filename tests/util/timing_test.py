@@ -1,5 +1,5 @@
 from checkpointing.util.timing import Timer, timed_run
-from nose.tools import raises
+from pytest import raises
 from time import sleep
 
 
@@ -19,7 +19,7 @@ def test_timed_run_returns_correct_result():
     assert res == (3, -1)
 
 
-@raises(RuntimeError)
 def test_timer_throws_error_when_start_is_not_called():
-    t = Timer()
-    return t.time
+    with raises(RuntimeError):
+        t = Timer()
+        return t.time

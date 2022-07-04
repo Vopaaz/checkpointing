@@ -9,3 +9,6 @@ class ExpensiveOverheadWarning(UserWarning):
 
 class CheckpointFailedWarning(RuntimeWarning):
     pass
+
+class RefactorFailedError(RuntimeError):
+    pass

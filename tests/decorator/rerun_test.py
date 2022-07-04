@@ -1,6 +1,6 @@
 from checkpointing.decorator import checkpoint
-from tests.testutils import rmdir_func, tmpdir, mkdir_func
-from nose.tools import with_setup, raises
+from tests.testutils import tmpdir, mkdir_before, rmdir_after
+from pytest import raises
 
 
 counter = 0  # Global counter
@@ -13,8 +13,7 @@ def foo(a):
     return a
 
 
-@with_setup(setup=mkdir_func, teardown=rmdir_func)
-def test_rerun_is_added_and_works():
+def test_rerun_is_added_and_works(mkdir_before, rmdir_after):
     global counter
     counter = 0
 
@@ -28,19 +27,16 @@ def test_rerun_is_added_and_works():
     assert counter == 2
 
 
-@with_setup(setup=mkdir_func, teardown=rmdir_func)
-def test_rerun_pass_parameters_and_returns_correctly():
+def test_rerun_pass_parameters_and_returns_correctly(mkdir_before, rmdir_after):
     assert foo.rerun(1) == 1
     assert foo.rerun(a=2) == 2
 
 
-@with_setup(setup=mkdir_func, teardown=rmdir_func)
-@raises(TypeError)
-def test_rerun_does_not_accept_wrong_args():
-    foo.rerun(1, 2)
+def test_rerun_does_not_accept_wrong_args(mkdir_before, rmdir_after):
+    with raises(TypeError):
+        foo.rerun(1, 2)
 
 
-@with_setup(setup=mkdir_func, teardown=rmdir_func)
-@raises(TypeError)
-def test_rerun_does_not_accept_wrong_kwargs():
-    foo.rerun(c=3)
+def test_rerun_does_not_accept_wrong_kwargs(mkdir_before, rmdir_after):
+    with raises(TypeError):
+        foo.rerun(c=3)
