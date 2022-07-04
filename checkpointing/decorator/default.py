@@ -30,6 +30,6 @@ def checkpoint(directory: str = None, on_error: str = "warn", algorithm: str = N
 
     identifier = AutoHashIdentifier(algorithm, hash_pickle_protocol)
     cache = PickleFileCache(directory, save_pickle_protocol)
-    cp = DecoratorCheckpoint(identifier, cache, on_error)
+    decorator = DecoratorCheckpoint(identifier, cache, on_error)
 
-    return cp
+    return decorator
