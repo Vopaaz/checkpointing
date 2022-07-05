@@ -14,6 +14,7 @@ class AutoHashIdentifier(FuncCallIdentifierBase):
                              `hash.pickle_protocol`
         """
         self.algorithm = algorithm
+        self.pickle_protocol = pickle_protocol
 
     def identify(self, context: Context) -> ContextId:
         """
@@ -30,4 +31,9 @@ class AutoHashIdentifier(FuncCallIdentifierBase):
             param_name_values.append(k)
             param_name_values.append(v)
 
-        return hash_anything(*param_name_values, context.function_code, algorithm=self.algorithm)
+        return hash_anything(
+            *param_name_values,
+            context.function_code,
+            algorithm=self.algorithm,
+            pickle_protocol=self.pickle_protocol,
+        )

@@ -51,14 +51,15 @@ if is_installed("pandas"):
     hashers[pd.DataFrame] = hash_pandas_object
 
 
-def hash_anything(*objs: Any, algorithm=None, pickle_protocol: int=pickle.DEFAULT_PROTOCOL) -> str:
+def hash_anything(*objs: Any, algorithm: str=None, pickle_protocol: int=None) -> str:
     """
     Args:
         objs: the objects to be hashed
         algorithm: the hash algorithm. Must be supported by the hashlib.
                    If it's not specified, use the global default `hash.algorithm`.
         pickle_protocol: the pickle protocol to use for hashing objects that does not have an optimized hasher, 
-                         and thus using the pickle_based fallback hasher
+                         and thus using the pickle_based fallback hasher.
+                         If it's not specified, user the global default `hash.pickle_protocol`
 
     Returns: a hexdigest of the hash value
 
@@ -68,6 +69,9 @@ def hash_anything(*objs: Any, algorithm=None, pickle_protocol: int=pickle.DEFAUL
 
     if algorithm is None:
         algorithm = defaults["hash.algorithm"]
+
+    if pickle_protocol is None:
+        pickle_protocol = defaults["hash.pickle_protocol"]
 
     hash_base = hashlib.new(algorithm)
 

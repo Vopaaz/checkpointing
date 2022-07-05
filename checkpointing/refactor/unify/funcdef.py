@@ -1,16 +1,26 @@
 from typing import Union, Dict, List, Any
 from checkpointing.exceptions import RefactorFailedError
-from checkpointing.refactor.util import local_variable_name_generator
+from checkpointing.refactor.util import local_variable_names_generator
 import ast
 from collections import deque, ChainMap
+import textwrap
+import copy
 
 
 class FunctionDefinitionUnifier:
     def __init__(self) -> None:
+        self.transformer = None
         super().__init__()
 
+    @property
+    def args_renaming(self):
+        if self.transformer is None:
+            raise RuntimeError(f"{self.__class__.__name__}.unify has not been invoked on any function definitions.")
+
+        return self.transformer.root_function_args_renaming
+
     def unify(self, func_definition: str) -> str:
-        tree = ast.parse(func_definition, mode="exec")
+        tree = ast.parse(textwrap.dedent(func_definition), mode="exec")
         if len(tree.body) > 1 or not isinstance(
             tree.body[0],
             (
@@ -21,7 +31,8 @@ class FunctionDefinitionUnifier:
         ):
             raise RefactorFailedError(f"The given code is not a single function definition: {func_definition}")
 
-        unified_tree = self.__transform(tree)
+        self.transformer = _FunctionDefinitionTransformer()
+        unified_tree = self.transformer.visit(tree)
 
         return ast.dump(
             unified_tree,
@@ -29,23 +40,14 @@ class FunctionDefinitionUnifier:
             include_attributes=False,
         )
 
-    def __transform(
-        self,
-        tree: Union[
-            ast.FunctionDef,
-            ast.AsyncFunctionDef,
-        ],
-    ) -> Union[ast.FunctionDef, ast.AsyncFunctionDef,]:
-        return FunctionDefinitionTransformer().visit(tree)
 
-
-class FunctionDefinitionTransformer(ast.NodeTransformer):
+class _FunctionDefinitionTransformer(ast.NodeTransformer):
     def __init__(self) -> None:
         super().__init__()
 
         self.local_variables = ChainMap()
-
-        self.names = local_variable_name_generator()
+        self.root_function_args_renaming = None
+        self.names = local_variable_names_generator()
 
     def visit_AnyClosure(
         self,
@@ -99,6 +101,12 @@ class FunctionDefinitionTransformer(ast.NodeTransformer):
         for arg in [node.args.vararg, node.args.kwarg]:
             if arg is not None:
                 self.unify_arg(arg, local_vars)
+
+        node.args.defaults = []
+        node.args.kw_defaults = []
+
+        if self.root_function_args_renaming is None:
+            self.root_function_args_renaming = copy.deepcopy(local_vars)
 
         return self.visit_AnyClosure(node, local_vars)
 
