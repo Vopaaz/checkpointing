@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from checkpointing.decorator.func_call.context import Context
+from checkpointing.identifier.func_call.context import Context
 from checkpointing._typing import ContextId
 
 

@@ -1,5 +1,5 @@
 from checkpointing.decorator.base import DecoratorCheckpoint
-from checkpointing.decorator.func_call.identifier import AutoHashIdentifier
+from checkpointing.identifier.func_call import AutoHashIdentifier
 from checkpointing.cache import PickleFileCache
 
 

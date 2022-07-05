@@ -1,5 +1,5 @@
 from checkpointing.decorator.base import DecoratorCheckpoint
-from checkpointing.decorator.func_call.identifier import AutoHashIdentifier, FuncCallIdentifierBase
+from checkpointing.identifier.func_call import AutoHashIdentifier, FuncCallIdentifierBase
 from checkpointing.cache import InMemoryLRUCache
 from pytest import raises
 

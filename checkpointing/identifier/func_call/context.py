@@ -58,9 +58,9 @@ class Context:
         >>> # Equivalent to the context computed for: foo()
         >>> ctx = Context(foo, (), {})
         >>>
-        >>> # foo is defined in checkpointing/decorator/func_call/context.py
+        >>> # foo is defined in checkpointing/identifier/func_call/context.py
         >>> ctx.function_name
-        'checkpointing.decorator.func_call.context.foo'
+        'checkpointing.identifier.func_call.context.foo'
         """
         return ".".join([self.__func.__module__, self.__func.__qualname__])
 

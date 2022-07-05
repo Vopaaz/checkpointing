@@ -1,5 +1,5 @@
-from checkpointing.decorator.func_call.identifier.base import FuncCallIdentifierBase
-from checkpointing.decorator.func_call.context import Context
+from checkpointing.identifier.func_call.base import FuncCallIdentifierBase
+from checkpointing.identifier.func_call.context import Context
 from checkpointing._typing import ContextId
 
 from checkpointing.hash import hash_anything
