@@ -19,7 +19,33 @@ class FunctionDefinitionUnifier:
 
         return self.transformer.root_function_args_renaming
 
-    def unify(self, func_definition: str) -> str:
+    def get_unified_ast_dump(self, func_definition: str) -> str:
+        """
+        Returns:
+            the dump string of the unified AST of the function definition.
+
+        By unified, it means that
+        - Type annotations are ignored
+        - Function name is unified
+        - Arguments, position-only arguments, and keyword-only arguments are renamed based on their 
+          lexicographic order
+        - Varargs and kwargs are renamed with a unique name
+        - Default values of the arguments
+        - Local variables are renamed based on their order of occurrence
+        - AugAssign statements (a += 1) are replaced with normal assign statements (a = a + 1)
+
+        Therefore, changing any aspect mentioned above will not change the returned AST dump.
+        Also trivially, AST dump is not affected by the code formatting and comments.
+
+        The criteria of the ignored/renamed/unified items above is:
+
+        Given that the arguments are provided in a keyword-specified way, taking the renaming of 
+        arguments into account, what changes will not cause the function return value to change.
+
+        This is useful for judging whether two function definitions, given the same input,
+        can produce the same output.
+        """
+
         tree = ast.parse(textwrap.dedent(func_definition), mode="exec")
         if len(tree.body) > 1 or not isinstance(
             tree.body[0],
@@ -59,8 +85,6 @@ class _FunctionDefinitionTransformer(ast.NodeTransformer):
         initial_map: Dict,
     ) -> Union[ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef,]:
 
-        self.unify_name(node, self.closure_local_variables)
-
         self.local_variables.maps.insert(0, initial_map)
         self.generic_visit(node)
         self.local_variables.maps.pop(0)
@@ -68,12 +92,14 @@ class _FunctionDefinitionTransformer(ast.NodeTransformer):
         return node
 
     @property
-    def closure_local_variables(self):
+    def current_closure_local_variables(self):
         return self.local_variables.maps[0]
 
-    def unify_arg(self, node: ast.arg, local_vars: Dict) -> None:
+    def unify_arg(self, node: ast.arg, local_vars: Dict, new_name: str = None) -> None:
         old_name = node.arg
-        new_name = next(self.names)
+
+        if new_name is None:
+            new_name = next(self.names)
 
         node.annotation = None
         node.arg = new_name
@@ -86,24 +112,39 @@ class _FunctionDefinitionTransformer(ast.NodeTransformer):
         node.name = new_name
         local_vars[old_name] = new_name
 
+        return new_name
+
     def visit_AnyFunctionDef(
         self,
         node: Union[ast.FunctionDef, ast.AsyncFunctionDef, ast.Lambda],
     ) -> Union[ast.FunctionDef, ast.AsyncFunctionDef, ast.Lambda]:
 
-        local_vars = {}
-        for attrname in ["posonlyargs", "args", "kwonlyargs"]:
-            if hasattr(node.args, attrname):
-                arglist = getattr(node.args, attrname)
-                for arg in arglist:
-                    self.unify_arg(arg, local_vars)
+        new_function_name = self.unify_name(node, self.current_closure_local_variables)
 
-        for arg in [node.args.vararg, node.args.kwarg]:
-            if arg is not None:
-                self.unify_arg(arg, local_vars)
+        local_vars = {}
+        args: List[ast.arg] = []
+
+        for attrname in ["posonlyargs", "args", "kwonlyargs"]:
+            if hasattr(node.args, attrname) and getattr(node.args, attrname) is not None:
+                arglist = getattr(node.args, attrname)
+                args.extend(arglist)
+            setattr(node.args, attrname, [])
+
+        for arg in sorted(args, key=lambda x: x.arg):
+            self.unify_arg(arg, local_vars)
+
+        for attrname in ["vararg", "kwarg"]:
+            if hasattr(node.args, attrname) and getattr(node.args, attrname) is not None:
+                self.unify_arg(
+                    getattr(node.args, attrname),
+                    local_vars,
+                    f"{new_function_name}_{attrname}",
+                )
+            setattr(node.args, attrname, None)
 
         node.args.defaults = []
         node.args.kw_defaults = []
+        node.returns = None
 
         if self.root_function_args_renaming is None:
             self.root_function_args_renaming = copy.deepcopy(local_vars)
@@ -111,14 +152,13 @@ class _FunctionDefinitionTransformer(ast.NodeTransformer):
         return self.visit_AnyClosure(node, local_vars)
 
     def visit_FunctionDef(self, node: ast.FunctionDef) -> ast.FunctionDef:
-        node.returns = None
         return self.visit_AnyFunctionDef(node)
 
     def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> ast.AsyncFunctionDef:
-        node.returns = None
         return self.visit_AnyFunctionDef(node)
 
     def visit_ClassDef(self, node: ast.ClassDef) -> ast.ClassDef:
+        self.unify_name(node, self.current_closure_local_variables)
         return self.visit_AnyClosure(node, {})
 
     def visit_Name(self, node: ast.Name) -> ast.Name:
@@ -127,12 +167,12 @@ class _FunctionDefinitionTransformer(ast.NodeTransformer):
 
         elif isinstance(node.ctx, ast.Store):
             new_name = next(self.names)
-            self.closure_local_variables[node.id] = new_name
+            self.current_closure_local_variables[node.id] = new_name
             return ast.Name(id=new_name, ctx=node.ctx)
 
     def visit_Global(self, node: ast.Global) -> ast.Global:
         for name in node.names:
-            self.closure_local_variables[name] = name
+            self.current_closure_local_variables[name] = name
         return node
 
     def visit_Nonlocal(self, node: ast.Nonlocal) -> ast.Nonlocal:
@@ -143,7 +183,7 @@ class _FunctionDefinitionTransformer(ast.NodeTransformer):
     def visit_AnnAssign(self, node: ast.AnnAssign) -> ast.Assign:
         assign = ast.Assign(
             targets=[node.target],
-            value=ast.Constant(value=None) if node.simple else node.value,
+            value=node.value if hasattr(node, "value") else ast.Constant(value=None),
         )
 
         self.generic_visit(assign)

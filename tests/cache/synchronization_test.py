@@ -35,7 +35,7 @@ class IncrementalFileCache(PickleFileCache):
             return 0
 
 
-def run_100_save(cache: CacheBase):
+def run_10_save(cache: CacheBase):
     for _ in range(10):
         cache.save("0", 0)
 
@@ -48,11 +48,11 @@ def test_multiprocessing_safe(rmdir_before, rmdir_after):
 
     futures = []
     with ProcessPoolExecutor() as e:
-        for _ in range(10):
-            f = e.submit(run_100_save, safe_cache)
+        for _ in range(5):
+            f = e.submit(run_10_save, safe_cache)
             futures.append(f)
 
         wait(futures)
 
-    assert safe_cache.retrieve("0") == 100
+    assert safe_cache.retrieve("0") == 50
 
