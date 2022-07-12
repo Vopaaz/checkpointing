@@ -18,12 +18,18 @@ class AutoHashIdentifier(FuncCallIdentifierBase):
                         in the code, such as formatting, adding type notations, and renaming local variables, etc.
                         If None, use the global default `identifier.func_call.unify_code`
         """
-        self.algorithm = algorithm
-        self.pickle_protocol = pickle_protocol
+
+        if algorithm is None:
+            algorithm = defaults["hash.algorithm"]
+
+        if pickle_protocol is None:
+            pickle_protocol = defaults["hash.pickle_protocol"]
 
         if unify_code is None:
             unify_code = defaults["identifier.func_call.unify_code"]
 
+        self.algorithm = algorithm
+        self.pickle_protocol = pickle_protocol
         self.unify_code = unify_code
 
     def identify(self, context: FuncCallContext) -> ContextId:

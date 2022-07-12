@@ -22,7 +22,7 @@ class PickleFileCache(CacheBase):
         self.__directory = pathlib.Path(directory if directory is not None else defaults["cache.filesystem.directory"])
         self.__directory.mkdir(parents=True, exist_ok=True)
 
-        self.__pickle_protocol = pickle_protocol
+        self.__pickle_protocol = pickle_protocol if pickle_protocol is not None else defaults["cache.pickle_protocol"]
 
     def get_file_path(self, context_id: str) -> pathlib.Path:
         """

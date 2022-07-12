@@ -56,8 +56,7 @@ class CacheBase(ABC, Generic[ContextId, ReturnValue]):
 CacheSubclass = TypeVar("CacheSubclass", bound=CacheBase)
 
 
-# Exclude this class from the coverage report because nosetests have weird behavior in multiprocessing
-class SynchronizedCache(CacheBase, Generic[CacheSubclass]): # pragma: no cover
+class SynchronizedCache(CacheBase, Generic[CacheSubclass]):
     """
     Base class for synchronized cache. In the constructor of a concrete subclass,
     a `self.lock` attribute should be assigned as a thread/process lock, or any analog of such synchronization locks.

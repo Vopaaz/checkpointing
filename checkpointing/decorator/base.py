@@ -9,8 +9,8 @@ from checkpointing._typing import ReturnValue, ContextId
 from checkpointing.identifier.func_call.context import FuncCallContext
 from checkpointing.identifier.func_call import FuncCallIdentifierBase
 from checkpointing.logging import logger
-
-from checkpointing.cache import CacheBase, PickleFileCache
+from checkpointing.config import defaults
+from checkpointing.cache import CacheBase
 
 
 class DecoratorCheckpoint(ABC, Generic[ReturnValue]):
@@ -35,6 +35,9 @@ class DecoratorCheckpoint(ABC, Generic[ReturnValue]):
 
         self.__cache = cache
         """The cache instance"""
+
+        if on_error is None:
+            on_error = defaults["checkpoint.on_error"]
 
         self.__on_error: str = on_error
         """The behavior when identification, saving or retrieval raises unexpected exceptions."""

@@ -3,7 +3,13 @@ from checkpointing.identifier.func_call import AutoHashIdentifier
 from checkpointing.cache import PickleFileCache
 
 
-def checkpoint(directory: str = None, on_error: str = "warn", algorithm: str = None, hash_pickle_protocol: int = None, save_pickle_protocol: int = None) -> DecoratorCheckpoint:
+def checkpoint(
+    directory: str = None,
+    on_error: str = "warn",
+    algorithm: str = None,
+    hash_pickle_protocol: int = None,
+    save_pickle_protocol: int = None,
+) -> DecoratorCheckpoint:
     """
     Alias for a default decorator checkpoint, which hashes the function code and parameter values,
     and save the return value as pickle files in a given directory.
