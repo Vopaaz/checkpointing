@@ -20,3 +20,30 @@ def test_rename_global_variable():
     """
 
     assert_ast_neq(c1, c2)
+
+def test_rename_get_attribute():
+    c1 = """
+    def foo(a):
+        return a.b
+    """
+
+    c2 = """
+    def foo(a):
+        return a.c
+    """
+
+    assert_ast_neq(c1, c2)
+
+
+def test_rename_get_slice():
+    c1 = """
+    def foo(a):
+        return a["b"]
+    """
+
+    c2 = """
+    def foo(a):
+        return a["c"]
+    """
+
+    assert_ast_neq(c1, c2)

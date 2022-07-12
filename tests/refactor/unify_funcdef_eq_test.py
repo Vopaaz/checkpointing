@@ -1,7 +1,6 @@
 from checkpointing.refactor.funcdef import FunctionDefinitionUnifier
 from pytest import raises
 
-u = FunctionDefinitionUnifier()
 
 
 def test_getting_renaming_without_unify_raises_error():
@@ -10,6 +9,7 @@ def test_getting_renaming_without_unify_raises_error():
 
 
 def assert_ast_eq(c1: str, c2: str):
+    u = FunctionDefinitionUnifier()
     assert u.get_unified_ast_dump(c1) == u.get_unified_ast_dump(c2)
 
 
@@ -161,6 +161,19 @@ def test_aug_assign():
         a = 1
         a = a + 1
         return a
+    """
+
+    assert_ast_eq(c1, c2)
+
+def test_complex_aug_assign():
+    c1 = """
+    def foo(a):
+        a.b["c"] += a.d["e"]
+    """
+
+    c2 = """
+    def foo(a):
+        a.b["c"] = a.b["c"] + a.d["e"]
     """
 
     assert_ast_eq(c1, c2)
