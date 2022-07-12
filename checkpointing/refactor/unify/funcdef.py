@@ -27,7 +27,7 @@ class FunctionDefinitionUnifier:
         By unified, it means that
         - Type annotations are ignored
         - Function name is unified
-        - Arguments, position-only arguments, and keyword-only arguments are renamed based on their 
+        - Arguments, position-only arguments, and keyword-only arguments are renamed based on their
           lexicographic order
         - Varargs and kwargs are renamed with a unique name
         - Default values of the arguments
@@ -39,7 +39,7 @@ class FunctionDefinitionUnifier:
 
         The criteria of the ignored/renamed/unified items above is:
 
-        Given that the arguments are provided in a keyword-specified way, taking the renaming of 
+        Given that the arguments are provided in a keyword-specified way, taking the renaming of
         arguments into account, what changes will not cause the function return value to change.
 
         This is useful for judging whether two function definitions, given the same input,
@@ -170,6 +170,9 @@ class _FunctionDefinitionTransformer(ast.NodeTransformer):
             self.current_closure_local_variables[node.id] = new_name
             return ast.Name(id=new_name, ctx=node.ctx)
 
+        else:
+            return node
+
     def visit_Global(self, node: ast.Global) -> ast.Global:
         for name in node.names:
             self.current_closure_local_variables[name] = name
@@ -190,10 +193,16 @@ class _FunctionDefinitionTransformer(ast.NodeTransformer):
         return assign
 
     def visit_AugAssign(self, node: ast.AugAssign) -> ast.AugAssign:
+        new_target = _ContextStoreToLoadTransformer().visit(
+            copy.copy(
+                node.target,
+            )
+        )
+
         assign = ast.Assign(
             targets=[node.target],
             value=ast.BinOp(
-                left=node.target,
+                left=new_target,
                 op=node.op,
                 right=node.value,
             ),
@@ -204,3 +213,29 @@ class _FunctionDefinitionTransformer(ast.NodeTransformer):
 
     def visit_Lambda(self, node: ast.Lambda) -> ast.Lambda:
         self.visit_AnyFunctionDef(node)
+
+
+class _ContextStoreToLoadTransformer(ast.NodeTransformer):
+    def visit_node_with_context(self, node: Union[ast.Attribute, ast.Subscript, ast.Starred, ast.Name, ast.List, ast.Tuple]):
+        cp = copy.copy(node)
+        cp.ctx = ast.Load()
+        self.generic_visit(cp)
+        return cp
+
+    def visit_Attribute(self, node: ast.Attribute) -> Any:
+        return self.visit_node_with_context(node)
+
+    def visit_Subscript(self, node: ast.Subscript) -> Any:
+        return self.visit_node_with_context(node)
+
+    def visit_Starred(self, node: ast.Starred) -> Any:
+        return self.visit_node_with_context(node)
+
+    def visit_Name(self, node: ast.Name) -> Any:
+        return self.visit_node_with_context(node)
+
+    def visit_List(self, node: ast.List) -> Any:
+        return self.visit_node_with_context(node)
+
+    def visit_Tuple(self, node: ast.Tuple) -> Any:
+        return self.visit_node_with_context(node)

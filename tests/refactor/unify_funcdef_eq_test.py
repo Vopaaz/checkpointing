@@ -59,6 +59,34 @@ def test_change_argument_name():
     assert_ast_eq(c1, c2)
 
 
+def test_rename_varargs():
+    c1 = """
+    def foo(*args):
+        return args
+    """
+
+    c2 = """
+    def foo(*a):
+        return a
+    """
+
+    assert_ast_eq(c1, c2)
+
+
+def test_rename_varargs():
+    c1 = """
+    def foo(**kwargs):
+        return kwargs
+    """
+
+    c2 = """
+    def foo(**k):
+        return k
+    """
+
+    assert_ast_eq(c1, c2)
+
+
 def test_change_default_argument_name():
 
     c1 = """
@@ -103,15 +131,36 @@ def test_swap_argument_order():
 
     assert_ast_eq(c1, c2)
 
-def test_rename_varargs_and_kwargs():
+
+def test_rename_local_variable():
     c1 = """
-    def foo(*a, **b):
-        return a + b
+    def foo():
+        a = 1
+        return a
     """
 
     c2 = """
-    def foo(*args, **kwargs):
-        return args + kwargs
+    def foo():
+        b = 1
+        return b
+    """
+
+    assert_ast_eq(c1, c2)
+
+
+def test_aug_assign():
+    c1 = """
+    def foo():
+        a = 1
+        a += 1
+        return a
+    """
+
+    c2 = """
+    def foo():
+        a = 1
+        a = a + 1
+        return a
     """
 
     assert_ast_eq(c1, c2)
