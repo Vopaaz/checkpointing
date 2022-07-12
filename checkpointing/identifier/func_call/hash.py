@@ -2,7 +2,7 @@ from checkpointing.identifier.func_call.base import FuncCallIdentifierBase
 from checkpointing.identifier.func_call.context import FuncCallContext
 from checkpointing._typing import ContextId
 from checkpointing.config import defaults
-from checkpointing.refactor.unify.funcdef import FunctionDefinitionUnifier
+from checkpointing.refactor.funcdef import FunctionDefinitionUnifier
 from typing import Dict
 
 from checkpointing.hash import hash_anything

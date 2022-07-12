@@ -1,4 +1,4 @@
-from checkpointing.refactor.unify.funcdef import FunctionDefinitionUnifier
+from checkpointing.refactor.funcdef import FunctionDefinitionUnifier
 from pytest import raises
 
 u = FunctionDefinitionUnifier()

@@ -1,7 +1,7 @@
 import inspect
 from typing import List, Dict, Tuple, Callable
 from checkpointing._typing import ReturnValue
-from checkpointing.refactor.unify.funcdef import FunctionDefinitionUnifier
+from checkpointing.refactor.funcdef import FunctionDefinitionUnifier
 
 
 class FuncCallContext:
