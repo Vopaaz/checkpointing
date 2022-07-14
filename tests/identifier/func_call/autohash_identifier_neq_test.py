@@ -2,7 +2,7 @@ from checkpointing.identifier.func_call.hash import AutoHashIdentifier
 from checkpointing.identifier.func_call.context import FuncCallContext
 
 
-def assert_context_neq(c1: FuncCallContext, c2: FuncCallContext):
+def assert_id_neq(c1: FuncCallContext, c2: FuncCallContext):
     ahi = AutoHashIdentifier(unify_code=True)
     assert ahi.identify(c1) != ahi.identify(c2)
 
@@ -16,7 +16,7 @@ def test_change_argument_default_value():
     c1 = FuncCallContext(foo, (), {})
     c2 = FuncCallContext(bar, (), {})
 
-    assert_context_neq(c1, c2)
+    assert_id_neq(c1, c2)
 
 def test_apply_argument_different_value():
     def foo(a):
@@ -28,7 +28,7 @@ def test_apply_argument_different_value():
     c1 = FuncCallContext(foo, (1,), {})
     c2 = FuncCallContext(bar, (2,), {})
 
-    assert_context_neq(c1, c2)
+    assert_id_neq(c1, c2)
 
 def test_code_different_logic():
     def foo(a):
@@ -40,7 +40,7 @@ def test_code_different_logic():
     c1 = FuncCallContext(foo, (1,), {})
     c2 = FuncCallContext(bar, (2,), {})
 
-    assert_context_neq(c1, c2)
+    assert_id_neq(c1, c2)
 
 def test_swap_argument_order_but_apply_different_logic():
     def foo(a, b):
@@ -52,7 +52,7 @@ def test_swap_argument_order_but_apply_different_logic():
     c1 = FuncCallContext(foo, (1, 2), {})
     c2 = FuncCallContext(bar, (2, 1), {})
 
-    assert_context_neq(c1, c2)
+    assert_id_neq(c1, c2)
 
 def test_add_varargs():
     def foo(a):
@@ -64,7 +64,7 @@ def test_add_varargs():
     c1 = FuncCallContext(foo, (1,), {})
     c2 = FuncCallContext(bar, (2,), {})
 
-    assert_context_neq(c1, c2)
+    assert_id_neq(c1, c2)
 
 
 def test_add_kwargs():
@@ -77,4 +77,4 @@ def test_add_kwargs():
     c1 = FuncCallContext(foo, (1,), {})
     c2 = FuncCallContext(bar, (2,), {})
 
-    assert_context_neq(c1, c2)
+    assert_id_neq(c1, c2)
