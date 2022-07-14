@@ -10,7 +10,7 @@ class FuncCallContext:
     Context of information for a function call.
     """
 
-    def __init__(self, func: Callable[..., ReturnValue], args: Tuple = (), kwargs: Dict = {}, caller_frame: FrameType = None) -> None:
+    def __init__(self, func: Callable[..., ReturnValue], args: Tuple, kwargs: Dict, caller_frame: FrameType = None) -> None:
         """
         Args:
             func: the function object that is being called
@@ -31,7 +31,6 @@ class FuncCallContext:
         else:
             self.__globals = None
             self.__locals = None
-        
 
     @property
     def arguments(self) -> Dict:
@@ -113,7 +112,6 @@ class FuncCallContext:
 
         return self.__func.__name__
 
-    
     @property
     def qualified_name(self) -> str:
         """
@@ -157,7 +155,7 @@ class FuncCallContext:
         Try to get the nonlocal variable `varname` from the caller's frame.
         If it doesn't exist in neither `globals` and `locals`, return `None`.
         If the caller_frame is not provided, the result is always `None`.
-        
+
         >>> import inspect
         >>>
         >>> a = 1
@@ -176,10 +174,5 @@ class FuncCallContext:
 
         if self.__globals is not None and varname in self.__globals:
             return self.__globals[varname]
-        
+
         return None
-
-
-
-
-
