@@ -28,13 +28,12 @@ class FunctionDefinitionUnifier:
         """
         Dictionary of the renaming of function arguments.
 
-        >>> u = FunctionDefinitionUnifier()
         >>> code = '''
         ...     def foo(a):
         ...         pass
         ...     '''
         >>>
-        >>> _ = u.get_unified_ast_dump(code)
+        >>> u = FunctionDefinitionUnifier(code)
         >>> u.args_renaming
         {'a': '__checkpointing_local_var_1__'}
         """
@@ -46,13 +45,12 @@ class FunctionDefinitionUnifier:
         """
         List of the nonlocal variables used in a Load context in the function code
 
-        >>> u = FunctionDefinitionUnifier()
         >>> code = '''
         ...     def foo():
         ...         a = b + 1 # b is some global variable defined elsewhere
         ...     '''
         >>>
-        >>> _ = u.get_unified_ast_dump(code)
+        >>> u = FunctionDefinitionUnifier(code)
         >>> u.loaded_nonlocal_variables
         ['b']
         """

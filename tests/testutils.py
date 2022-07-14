@@ -26,3 +26,13 @@ def rmdir_after():
 def mkdir_before():
     mkdir_func()
     yield
+
+class InvokeCounter:
+    def __init__(self) -> None:
+        self.cnt = 0
+
+    def reset(self) -> None:
+        self.cnt = 0
+
+    def __call__(self) -> None:
+        self.cnt += 1

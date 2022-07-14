@@ -156,6 +156,7 @@ class FuncCallContext:
         r"""
         Try to get the nonlocal variable `varname` from the caller's frame.
         If it doesn't exist in neither `globals` and `locals`, return `None`.
+        If the caller_frame is not provided, the result is always `None`.
         
         >>> import inspect
         >>>
@@ -170,14 +171,13 @@ class FuncCallContext:
         True
         """
 
-        if self.__locals is not None:
-            return self.__locals.get(varname, None)
+        if self.__locals is not None and varname in self.__locals:
+            return self.__locals[varname]
 
-        elif self.__globals is not None:
-            return self.__globals.get(varname, None)
+        if self.__globals is not None and varname in self.__globals:
+            return self.__globals[varname]
         
-        else:
-            return None
+        return None
 
 
 
