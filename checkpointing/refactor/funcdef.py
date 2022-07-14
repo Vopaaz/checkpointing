@@ -8,18 +8,67 @@ import copy
 
 
 class FunctionDefinitionUnifier:
-    def __init__(self) -> None:
-        self.transformer = None
-        super().__init__()
+    def __init__(self, func_definition: str) -> None:
+        tree = ast.parse(textwrap.dedent(func_definition), mode="exec")
+        if len(tree.body) > 1 or not isinstance(
+            tree.body[0],
+            (
+                ast.FunctionDef,
+                ast.AsyncFunctionDef,
+                ast.Lambda,
+            ),
+        ):
+            raise RefactorFailedError(f"The given code is not a single function definition: {func_definition}")
+
+        self.transformer = _FunctionDefinitionTransformer()
+        self.unified_tree = self.transformer.visit(tree)
 
     @property
-    def args_renaming(self):
-        if self.transformer is None:
-            raise RuntimeError(f"{self.__class__.__name__}.unify has not been invoked on any function definitions.")
+    def args_renaming(self) -> Dict[str, str]:
+        """
+        Dictionary of the renaming of function arguments.
+
+        >>> u = FunctionDefinitionUnifier()
+        >>> code = '''
+        ...     def foo(a):
+        ...         pass
+        ...     '''
+        >>>
+        >>> _ = u.get_unified_ast_dump(code)
+        >>> u.args_renaming
+        {'a': '__checkpointing_local_var_1__'}
+        """
 
         return self.transformer.root_function_args_renaming
 
-    def get_unified_ast_dump(self, func_definition: str) -> str:
+    @property
+    def loaded_nonlocal_variables(self) -> List[str]:
+        """
+        List of the nonlocal variables used in a Load context in the function code
+
+        >>> u = FunctionDefinitionUnifier()
+        >>> code = '''
+        ...     def foo():
+        ...         a = b + 1 # b is some global variable defined elsewhere
+        ...     '''
+        >>>
+        >>> _ = u.get_unified_ast_dump(code)
+        >>> u.loaded_nonlocal_variables
+        ['b']
+        """
+
+        return self.transformer.readonly_nonlocal_variables
+
+    @property
+    def has_global_statement(self) -> bool:
+        return self.transformer.has_global_statement
+
+    @property
+    def has_nonlocal_statement(self) -> bool:
+        return self.transformer.has_nonlocal_statement
+
+    @property
+    def unified_ast_dump(self) -> str:
         """
         Returns:
             the dump string of the unified AST of the function definition.
@@ -46,22 +95,8 @@ class FunctionDefinitionUnifier:
         can produce the same output.
         """
 
-        tree = ast.parse(textwrap.dedent(func_definition), mode="exec")
-        if len(tree.body) > 1 or not isinstance(
-            tree.body[0],
-            (
-                ast.FunctionDef,
-                ast.AsyncFunctionDef,
-                ast.Lambda,
-            ),
-        ):
-            raise RefactorFailedError(f"The given code is not a single function definition: {func_definition}")
-
-        self.transformer = _FunctionDefinitionTransformer()
-        unified_tree = self.transformer.visit(tree)
-
         return ast.dump(
-            unified_tree,
+            self.unified_tree,
             annotate_fields=False,
             include_attributes=False,
         )
@@ -73,6 +108,11 @@ class _FunctionDefinitionTransformer(ast.NodeTransformer):
 
         self.local_variables = ChainMap()
         self.root_function_args_renaming = None
+        self.readonly_nonlocal_variables = []
+
+        self.has_global_statement = False
+        self.has_nonlocal_statement = False
+
         self.names = local_variable_names_generator()
 
     def visit_AnyClosure(
@@ -171,17 +211,16 @@ class _FunctionDefinitionTransformer(ast.NodeTransformer):
             return ast.Name(id=new_name, ctx=node.ctx)
 
         else:
+            self.readonly_nonlocal_variables.append(node.id)
             return node
 
     def visit_Global(self, node: ast.Global) -> ast.Global:
-        for name in node.names:
-            self.current_closure_local_variables[name] = name
+        self.has_global_statement = True
         return node
 
     def visit_Nonlocal(self, node: ast.Nonlocal) -> ast.Nonlocal:
-        return ast.Nonlocal(
-            names=[self.local_variables[n] for n in node.names],
-        )
+        self.has_nonlocal_statement = True
+        return node
 
     def visit_AnnAssign(self, node: ast.AnnAssign) -> ast.Assign:
         assign = ast.Assign(

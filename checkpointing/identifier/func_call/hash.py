@@ -3,7 +3,10 @@ from checkpointing.identifier.func_call.context import FuncCallContext
 from checkpointing._typing import ContextId
 from checkpointing.config import defaults
 from checkpointing.refactor.funcdef import FunctionDefinitionUnifier
+from checkpointing.exceptions import GlobalStatementError, NonlocalStatementError
 from typing import Dict
+import textwrap
+import copy
 
 from checkpointing.hash import hash_anything
 
@@ -40,36 +43,56 @@ class AutoHashIdentifier(FuncCallIdentifierBase):
             the function call context identifier
         """
 
+        unifier = FunctionDefinitionUnifier(context.code)
+        self.__check_unsupported_statements(unifier, context.code)
+
         if self.unify_code:
-            self.__identify_with_unification(context)
+            return self.__identify_with_unification(context, unifier)
         else:
-            self.__identify_without_unification(context)
+            return self.__identify_without_unification(context)
 
-    def __identify_with_unification(self, context: FuncCallContext) -> ContextId:
-        transformer = FunctionDefinitionUnifier()
-        ast = transformer.get_unified_ast_dump(context.code)
+    def __check_unsupported_statements(self, unifier: FunctionDefinitionUnifier, original_code: str):
+        error_text = lambda stmt_type: textwrap.dedent(
+        f"""
+        '{stmt_type}' statement detected in the code. This indicates that you are changing a {stmt_type} variable in the function, which is not a use case with checkpointing.
+        Your code:
+        {original_code}
+        """
+        )
+        if unifier.has_global_statement:
+            raise GlobalStatementError(error_text("global"))
 
-        arguments = context.arguments
-        for old_name, new_name in transformer.args_renaming.items():
+        if unifier.has_nonlocal_statement:
+            raise NonlocalStatementError(error_text("nonlocal"))
+
+    def __identify_with_unification(self, context: FuncCallContext, unifier: FunctionDefinitionUnifier) -> ContextId:
+
+        arguments = copy.copy(context.arguments)
+        for old_name, new_name in unifier.args_renaming.items():
             arguments[new_name] = arguments.pop(old_name)
 
-        return self.__identify_general(arguments, ast)
+        return self.__identify_general(
+            arguments,
+            unifier.unified_ast_dump,
+            context.module,
+        )
 
     def __identify_without_unification(self, context: FuncCallContext) -> ContextId:
         return self.__identify_general(
             context.arguments,
             context.code,
+            context.module,
         )
 
-    def __identify_general(self, arguments: Dict, code: str) -> ContextId:
+    def __identify_general(self, arguments: Dict, *others: str) -> ContextId:
         param_name_values = []
-        for k, v in arguments.items():
+        for k, v in sorted(arguments.items()):
             param_name_values.append(k)
             param_name_values.append(v)
 
         return hash_anything(
             *param_name_values,
-            code,
+            *others,
             algorithm=self.algorithm,
             pickle_protocol=self.pickle_protocol,
         )

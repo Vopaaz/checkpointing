@@ -3,14 +3,10 @@ from pytest import raises
 
 
 
-def test_getting_renaming_without_unify_raises_error():
-    with raises(RuntimeError):
-        return FunctionDefinitionUnifier().args_renaming
-
-
 def assert_ast_eq(c1: str, c2: str):
-    u = FunctionDefinitionUnifier()
-    assert u.get_unified_ast_dump(c1) == u.get_unified_ast_dump(c2)
+    u1 = FunctionDefinitionUnifier(c1)
+    u2 = FunctionDefinitionUnifier(c2)
+    assert u1.unified_ast_dump == u2.unified_ast_dump
 
 
 def test_add_type_annotation():

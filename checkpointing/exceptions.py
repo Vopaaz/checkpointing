@@ -12,3 +12,9 @@ class CheckpointFailedWarning(RuntimeWarning):
 
 class RefactorFailedError(RuntimeError):
     pass
+
+class GlobalStatementError(RuntimeError):
+    pass
+
+class NonlocalStatementError(RuntimeError):
+    pass

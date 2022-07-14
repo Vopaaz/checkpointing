@@ -1,6 +1,8 @@
 import inspect
-from typing import List, Dict, Tuple, Callable
+from typing import List, Dict, Tuple, Callable, Any
 from checkpointing._typing import ReturnValue
+from types import FrameType
+import copy
 
 
 class FuncCallContext:
@@ -8,25 +10,28 @@ class FuncCallContext:
     Context of information for a function call.
     """
 
-    def __init__(self, func: Callable[..., ReturnValue], args: Tuple, kwargs: Dict) -> None:
+    def __init__(self, func: Callable[..., ReturnValue], args: Tuple = (), kwargs: Dict = {}, caller_frame: FrameType = None) -> None:
         """
         Args:
+            func: the function object that is being called
             args: the non-keywords arguments of the function call
             kwargs: the keyword arguments of the function call
-            func: the function object that is being called
+            call_frame: the frame where the function is called
         """
 
         self.__func: Callable[..., ReturnValue] = func
-        """Function called"""
-
         self.__args: Tuple = args
-        """Arguments of the function call"""
-
         self.__kwargs: Dict = kwargs
-        """Keyword arguments of the function call"""
-
         self.__signature = inspect.signature(self.__func)
-        """Signature of the function"""
+
+        if caller_frame is not None:
+            self.__globals = copy.copy(caller_frame.f_globals)
+            self.__locals = copy.copy(caller_frame.f_locals)
+
+        else:
+            self.__globals = None
+            self.__locals = None
+        
 
     @property
     def arguments(self) -> Dict:
@@ -146,3 +151,35 @@ class FuncCallContext:
         """
 
         return inspect.getsource(self.__func)
+
+    def get_nonlocal_variable(self, varname: str) -> Any:
+        r"""
+        Try to get the nonlocal variable `varname` from the caller's frame.
+        If it doesn't exist in neither `globals` and `locals`, return `None`.
+        
+        >>> import inspect
+        >>>
+        >>> a = 1
+        >>> def foo():
+        ...     pass
+        >>>
+        >>> ctx = FuncCallContext(foo, (), {}, inspect.currentframe())
+        >>> ctx.get_nonlocal_variable("a")
+        1
+        >>> ctx.get_nonlocal_variable("b") is None
+        True
+        """
+
+        if self.__locals is not None:
+            return self.__locals.get(varname, None)
+
+        elif self.__globals is not None:
+            return self.__globals.get(varname, None)
+        
+        else:
+            return None
+
+
+
+
+

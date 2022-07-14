@@ -11,6 +11,7 @@ from checkpointing.identifier.func_call import FuncCallIdentifierBase
 from checkpointing.logging import logger
 from checkpointing.config import defaults
 from checkpointing.cache import CacheBase
+import inspect
 
 
 class DecoratorCheckpoint(ABC, Generic[ReturnValue]):
@@ -65,26 +66,38 @@ class DecoratorCheckpoint(ABC, Generic[ReturnValue]):
 
         return inner
 
+    def __get_context_and_id(self, func, args, kwargs, current_frame):
+        context = FuncCallContext(
+            func,
+            args,
+            kwargs,
+            current_frame.f_back if current_frame is not None else None,
+        )
+        context_id = self.__identifier.identify(context)
+        return context, context_id
+
     def __create_inner(self, func: Callable[..., ReturnValue]) -> Callable[..., ReturnValue]:
         @wraps(func)
         def inner(*args, **kwargs) -> ReturnValue:
-
-            context = FuncCallContext(func, args, kwargs)
-            context_id = self.__identifier.identify(context)
+            context, context_id = self.__get_context_and_id(
+                func,
+                args,
+                kwargs,
+                inspect.currentframe(),
+            )
 
             retrieve_success, res, retrieve_time = self.__timed_safe_retrieve(context, context_id)
 
             if retrieve_success:
-                logger.info(f"Result of {func.__qualname__}(**{context.arguments}) retrieved from cache")
+                logger.info(f"Result of {context.qualified_name} with args {context.arguments} retrieved from cache")
                 return res
 
             else:
-                logger.info(f"Result of {func.__qualname__}(**{context.arguments}) unavailable from cache")
+                logger.info(f"Result of {context.qualified_name} with args {context.arguments} unavailable from cache")
 
                 res, run_time = timed_run(func, *args, **kwargs)
 
                 save_time = self.__timed_safe_save(context, context_id, res)
-                logger.info(f"Result of {func.__qualname__}(**{context.arguments}) saved to cache")
 
                 self.__warn_if_more_expensive(context, retrieve_time + save_time, run_time)
                 return res
@@ -93,15 +106,18 @@ class DecoratorCheckpoint(ABC, Generic[ReturnValue]):
 
     def __bind_rerun(self, original_func: Callable[..., ReturnValue], inner_func: Callable[..., ReturnValue]) -> None:
         def rerun(*args, **kwargs) -> ReturnValue:
-            context = FuncCallContext(original_func, args, kwargs)
-            context_id = self.__identifier.identify(context)
+            context, context_id = self.__get_context_and_id(
+                original_func,
+                args,
+                kwargs,
+                inspect.currentframe(),
+            )
 
             logger.info(f"Forcing rerun of {original_func.__qualname__}(**{context.arguments})")
 
             res, run_time = timed_run(original_func, *args, **kwargs)
 
             save_time = self.__timed_safe_save(context, context_id, res)
-            logger.info(f"Result of {original_func.__qualname__}(**{context.arguments}) saved to cache")
 
             self.__warn_if_more_expensive(context, save_time, run_time)
             return res
@@ -186,6 +202,7 @@ class DecoratorCheckpoint(ABC, Generic[ReturnValue]):
         timer = Timer().start()
         try:
             self.__cache.save(context_id, result)
+            logger.info(f"Result of {context.qualified_name} with args {context.arguments} saved to cache")
 
         except Exception as e:
             self.__handle_unexpected_error(context, e)
