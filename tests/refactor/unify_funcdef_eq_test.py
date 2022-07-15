@@ -1,13 +1,17 @@
 from checkpointing.refactor.funcdef import FunctionDefinitionUnifier
-from pytest import raises
+from typing import Tuple, List
 
 
-
-def assert_ast_eq(c1: str, c2: str):
+def assert_ast_eq(c1: str, c2: str, eq_args: List[Tuple] = [], eq_nonlocal: List[Tuple]= []):
     u1 = FunctionDefinitionUnifier(c1)
     u2 = FunctionDefinitionUnifier(c2)
     assert u1.unified_ast_dump == u2.unified_ast_dump
 
+    for v1, v2 in eq_args:
+        assert u1.args_renaming[v1] == u2.args_renaming[v2]
+
+    for v1, v2 in eq_nonlocal:
+        assert u1.nonlocal_variables_renaming[v1] == u2.nonlocal_variables_renaming[v2]
 
 def test_add_type_annotation():
     c1 = """
@@ -144,6 +148,20 @@ def test_rename_local_variable():
     assert_ast_eq(c1, c2)
 
 
+def test_rename_global_variable():
+    c1 = """
+    def foo():
+        return global_var1
+    """
+
+    c2 = """
+    def foo():
+        return global_var2
+    """
+
+    assert_ast_eq(c1, c2)
+
+
 def test_aug_assign():
     c1 = """
     def foo():
@@ -160,6 +178,7 @@ def test_aug_assign():
     """
 
     assert_ast_eq(c1, c2)
+
 
 def test_complex_aug_assign():
     c1 = """

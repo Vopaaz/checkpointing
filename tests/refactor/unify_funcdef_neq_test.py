@@ -8,20 +8,6 @@ def assert_ast_neq(c1: str, c2: str):
     assert u1.unified_ast_dump != u2.unified_ast_dump
 
 
-def test_rename_global_variable():
-    c1 = """
-    def foo():
-        return global_var1
-    """
-
-    c2 = """
-    def foo():
-        return global_var2
-    """
-
-    assert_ast_neq(c1, c2)
-
-
 def test_rename_get_attribute():
     c1 = """
     def foo(a):
@@ -36,7 +22,7 @@ def test_rename_get_attribute():
     assert_ast_neq(c1, c2)
 
 
-def test_rename_get_slice():
+def test_change_get_slice():
     c1 = """
     def foo(a):
         return a["b"]

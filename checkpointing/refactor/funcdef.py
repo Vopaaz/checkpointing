@@ -1,6 +1,6 @@
 from typing import Union, Dict, List, Any
 from checkpointing.exceptions import RefactorFailedError
-from checkpointing.refactor.util import local_variable_names_generator
+from checkpointing.refactor.util import local_variable_names_generator, nonlocal_variable_names_generator
 import ast
 from collections import deque, ChainMap
 import textwrap
@@ -41,9 +41,9 @@ class FunctionDefinitionUnifier:
         return self.transformer.root_function_args_renaming
 
     @property
-    def loaded_nonlocal_variables(self) -> List[str]:
+    def nonlocal_variables_renaming(self) -> List[str]:
         """
-        List of the nonlocal variables used in a Load context in the function code
+        Dictionary of the renaming of nonlocal variables referenced by the function.
 
         >>> code = '''
         ...     def foo():
@@ -51,11 +51,11 @@ class FunctionDefinitionUnifier:
         ...     '''
         >>>
         >>> u = FunctionDefinitionUnifier(code)
-        >>> u.loaded_nonlocal_variables
-        ['b']
+        >>> u.nonlocal_variables_renaming
+        {'b': '__checkpointing_nonlocal_var_0__'}
         """
 
-        return self.transformer.readonly_nonlocal_variables
+        return self.transformer.nonlocal_variables
 
     @property
     def has_global_statement(self) -> bool:
@@ -79,6 +79,7 @@ class FunctionDefinitionUnifier:
         - Varargs and kwargs are renamed with a unique name
         - Default values of the arguments
         - Local variables are renamed based on their order of occurrence
+        - Global variables are renamed based on their order of occurrence
         - AugAssign statements (a += 1) are replaced with normal assign statements (a = a + 1)
 
         Therefore, changing any aspect mentioned above will not change the returned AST dump.
@@ -106,12 +107,13 @@ class _FunctionDefinitionTransformer(ast.NodeTransformer):
 
         self.local_variables = ChainMap()
         self.root_function_args_renaming = None
-        self.readonly_nonlocal_variables = []
+        self.nonlocal_variables = {}
 
         self.has_global_statement = False
         self.has_nonlocal_statement = False
 
-        self.names = local_variable_names_generator()
+        self.local_names = local_variable_names_generator()
+        self.nonlocal_names = nonlocal_variable_names_generator()
 
     def visit_AnyClosure(
         self,
@@ -137,7 +139,7 @@ class _FunctionDefinitionTransformer(ast.NodeTransformer):
         old_name = node.arg
 
         if new_name is None:
-            new_name = next(self.names)
+            new_name = next(self.local_names)
 
         node.annotation = None
         node.arg = new_name
@@ -145,7 +147,7 @@ class _FunctionDefinitionTransformer(ast.NodeTransformer):
 
     def unify_name(self, node: Any, local_vars: Dict) -> None:
         old_name = node.name
-        new_name = next(self.names)
+        new_name = next(self.local_names)
 
         node.name = new_name
         local_vars[old_name] = new_name
@@ -200,17 +202,22 @@ class _FunctionDefinitionTransformer(ast.NodeTransformer):
         return self.visit_AnyClosure(node, {})
 
     def visit_Name(self, node: ast.Name) -> ast.Name:
-        if node.id in self.local_variables:
+
+        if node.id in self.local_variables:  # Local variables that are already renamed
             return ast.Name(id=self.local_variables[node.id], ctx=node.ctx)
 
-        elif isinstance(node.ctx, ast.Store):
-            new_name = next(self.names)
+        elif node.id in self.nonlocal_variables:  # Nonlocal variables that are already renamed
+            return ast.Name(id=self.nonlocal_variables[node.id], ctx=node.ctx)
+
+        elif isinstance(node.ctx, ast.Store):  # New local variable declaration
+            new_name = next(self.local_names)
             self.current_closure_local_variables[node.id] = new_name
             return ast.Name(id=new_name, ctx=node.ctx)
 
-        else:
-            self.readonly_nonlocal_variables.append(node.id)
-            return node
+        elif isinstance(node.ctx, ast.Load):  # New nonlocal variable reference
+            new_name = next(self.nonlocal_names)
+            self.nonlocal_variables[node.id] = new_name
+            return ast.Name(id=new_name, ctx=node.ctx)
 
     def visit_Global(self, node: ast.Global) -> ast.Global:
         self.has_global_statement = True
