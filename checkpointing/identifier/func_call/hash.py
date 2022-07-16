@@ -66,8 +66,6 @@ class AutoHashIdentifier(FuncCallIdentifierBase):
             var = context.get_nonlocal_variable(old_name)
             variables[new_name] = var if var is not None else (old_name, "__checkpointing_no_nonlocal_reference__")
 
-        print(sorted(variables.items()))
-
         return hash_anything(
             *sorted(variables.items()),
             unifier.unified_ast_dump,

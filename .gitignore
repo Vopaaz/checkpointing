@@ -133,3 +133,6 @@ docs
 .html-coverage
 .checkpointing-unit-test-tmp/
 .xml-coverage
+
+testworkspace/
+.checkpointing/
