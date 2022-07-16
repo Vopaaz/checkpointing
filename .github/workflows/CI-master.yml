@@ -1,4 +1,4 @@
-name: Unit Testing on Merge or commit to master
+name: Testing on Master
 
 on:
   push:
