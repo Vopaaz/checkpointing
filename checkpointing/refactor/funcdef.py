@@ -233,6 +233,7 @@ class _FunctionDefinitionTransformer(ast.NodeTransformer):
         assign = ast.Assign(
             targets=[node.target],
             value=node.value if hasattr(node, "value") else ast.Constant(value=None),
+            type_comment=None,
         )
 
         self.generic_visit(assign)
@@ -252,6 +253,7 @@ class _FunctionDefinitionTransformer(ast.NodeTransformer):
                 op=node.op,
                 right=node.value,
             ),
+            type_comment=None
         )
 
         self.generic_visit(assign)

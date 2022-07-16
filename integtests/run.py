@@ -74,7 +74,7 @@ def run_case(case_name):
             expected = sanitize(f.read())
 
         p = subprocess.run(
-            ["py", "-3", "-m", f"{workspace.name}.main"],
+            ["python", "-m", f"{workspace.name}.main"],
             capture_output=True,
             cwd=cwd,
         )
