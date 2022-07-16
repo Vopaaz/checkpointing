@@ -1,18 +1,17 @@
 from checkpointing.decorator.base import DecoratorCheckpoint
-from checkpointing.decorator.func_call.identifier import FuncCallHashIdentifier, FuncCallIdentifierBase
+from checkpointing.identifier.func_call import AutoHashIdentifier, FuncCallIdentifierBase
 from checkpointing.cache import InMemoryLRUCache
-from nose.tools import raises
+from pytest import raises
 
-@raises(ValueError)
 def test_invalid_identifier_throws_error():
-    DecoratorCheckpoint(0, InMemoryLRUCache())
+    with raises(ValueError):
+        DecoratorCheckpoint(0, InMemoryLRUCache())
 
     
-@raises(ValueError)
 def test_invalid_cache_throws_error():
-    DecoratorCheckpoint(FuncCallHashIdentifier(), 0)
+    with raises(ValueError):
+        DecoratorCheckpoint(AutoHashIdentifier(), 0)
 
-    
-@raises(ValueError)
 def test_invalid_error_level_throws_error():
-    DecoratorCheckpoint(FuncCallHashIdentifier(), InMemoryLRUCache(), "hello")
+    with raises(ValueError):
+        DecoratorCheckpoint(AutoHashIdentifier(), InMemoryLRUCache(), "hello")

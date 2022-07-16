@@ -1,4 +1,4 @@
-name: Unit Testing on Merge or commit to master
+name: Testing on Master
 
 on:
   push:
@@ -13,7 +13,7 @@ jobs:
 
     strategy:
       matrix:
-        python-version: ["3.7", "3.8", "3.9"]
+        python-version: ["3.7", "3.8", "3.9", "3.10"]
         runs-on: ["ubuntu-latest", "windows-latest", "macos-latest"]
 
     runs-on: "${{ matrix.runs-on }}"
@@ -32,11 +32,11 @@ jobs:
           pip install -r requirements.txt
           pip install -r dev-requirements.txt
 
-      - name: Manual tests for synchronized cache
-        run: python -m tests.cache.synchronization_test
+      - name: Run unit tests
+        run: pytest tests/ checkpointing/
 
-      - name: Run tests
-        run: nosetests --with-coverage --cover-xml --cover-package=checkpointing --with-doctest tests/**/*.py checkpointing
+      - name: Run integration tests
+        run: python -m integtests.run
 
       - name: "Upload coverage to Codecov"
         uses: codecov/codecov-action@v2

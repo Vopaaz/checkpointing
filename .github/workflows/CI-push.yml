@@ -1,4 +1,4 @@
-name: Unit Testing
+name: Testing on Push
 
 on:
   push:
@@ -7,6 +7,11 @@ on:
 
 jobs:
   build:
+
+    strategy:
+      matrix:
+        python-version: ["3.7", "3.8", "3.9", "3.10"]
+
     runs-on: ubuntu-latest
 
     steps:
@@ -15,7 +20,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: "3.9"
+          python-version: "${{ matrix.python-version }}"
 
       - name: Install dependencies
         run: |
@@ -23,14 +28,12 @@ jobs:
           pip install -r requirements.txt
           pip install -r dev-requirements.txt
 
-      - name: Manual tests for synchronized cache
-        run: python -m tests.cache.synchronization_test
-
       - name: Run tests
-        run: nosetests --with-coverage --cover-xml --cover-package=checkpointing --with-doctest tests/**/*.py checkpointing
+        run: pytest tests/ checkpointing/
 
       - name: "Upload coverage to Codecov"
         uses: codecov/codecov-action@v2
         with:
           fail_ci_if_error: false
           token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
+          files: ./.coverage/.xml-coverage

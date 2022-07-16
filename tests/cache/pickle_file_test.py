@@ -1,15 +1,10 @@
-from checkpointing import defaults
-import shutil
 from checkpointing.cache.pickle_file import PickleFileCache, CheckpointNotExist
-from nose import with_setup
-from nose.tools import raises
 import pickle
-from tests.testutils import rmdir_func, tmpdir
+from tests.testutils import tmpdir, rmdir_before
+from pytest import raises
 
 
-@with_setup(setup=rmdir_func)
-def test_cache_creates_dir_automatically():
-
+def test_cache_creates_dir_automatically(rmdir_before):
     assert not tmpdir.exists()
     PickleFileCache(tmpdir)
     assert tmpdir.exists()
@@ -36,8 +31,7 @@ def test_cache_retrieves_result():
     assert cache.retrieve("1") == value
 
 
-@with_setup(setup=rmdir_func)
-@raises(CheckpointNotExist)
-def test_cache_throws_CheckpointNotExist():
-    cache = PickleFileCache(tmpdir)
-    cache.retrieve("0")
+def test_cache_throws_CheckpointNotExist(rmdir_before):
+    with raises(CheckpointNotExist):
+        cache = PickleFileCache(tmpdir)
+        cache.retrieve("0")

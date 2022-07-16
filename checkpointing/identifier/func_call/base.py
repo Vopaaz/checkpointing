@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from checkpointing.decorator.func_call.context import Context
+from checkpointing.identifier.func_call.context import FuncCallContext
 from checkpointing._typing import ContextId
 
 
@@ -9,7 +9,7 @@ class FuncCallIdentifierBase(ABC):
     """
 
     @abstractmethod
-    def identify(self, context: Context) -> ContextId:
+    def identify(self, context: FuncCallContext) -> ContextId:
         """
         Args:
             context: context of a function call

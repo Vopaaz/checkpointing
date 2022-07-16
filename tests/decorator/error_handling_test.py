@@ -1,8 +1,8 @@
 from checkpointing.decorator.base import DecoratorCheckpoint
 from checkpointing.exceptions import ExpensiveOverheadWarning, CheckpointFailedError, CheckpointFailedWarning
 from checkpointing.cache import CacheBase, InMemoryLRUCache
-from checkpointing import ContextId, ReturnValue, FuncCallHashIdentifier
-from nose.tools import raises
+from checkpointing import ContextId, ReturnValue, AutoHashIdentifier
+from pytest import raises
 import warnings
 import time
 
@@ -25,10 +25,10 @@ class ErrorCache(InMemoryLRUCache):
         raise ValueError
 
 
-slow_deco = DecoratorCheckpoint(FuncCallHashIdentifier(), SlowCache(), error="raise")
-error_deco = DecoratorCheckpoint(FuncCallHashIdentifier(), ErrorCache(), error="raise")
-warn_deco = DecoratorCheckpoint(FuncCallHashIdentifier(), ErrorCache(), error="warn")
-ignore_deco = DecoratorCheckpoint(FuncCallHashIdentifier(), ErrorCache(), error="ignore")
+slow_deco = DecoratorCheckpoint(AutoHashIdentifier(), SlowCache(), on_error="raise")
+error_deco = DecoratorCheckpoint(AutoHashIdentifier(), ErrorCache(), on_error="raise")
+warn_deco = DecoratorCheckpoint(AutoHashIdentifier(), ErrorCache(), on_error="warn")
+ignore_deco = DecoratorCheckpoint(AutoHashIdentifier(), ErrorCache(), on_error="ignore")
 
 
 @slow_deco
@@ -57,10 +57,9 @@ def test_slow_decorator_gives_warning():  # which ignores any "error" parameters
         assert len(w) == 1
         assert issubclass(w[-1].category, ExpensiveOverheadWarning)
 
-
-@raises(CheckpointFailedError)
 def test_error_decorator_throws_error():
-    error_func()
+    with raises(CheckpointFailedError):
+        error_func()
 
 
 def test_warn_decorator_gives_warning():

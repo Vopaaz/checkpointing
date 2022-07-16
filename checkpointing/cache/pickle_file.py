@@ -10,17 +10,19 @@ import pickle
 class PickleFileCache(CacheBase):
     """Cache the result as pickle files saved on the disk."""
 
-    def __init__(self, directory: os.PathLike = None, pickle_protocol: int = pickle.DEFAULT_PROTOCOL) -> None:
+    def __init__(self, directory: os.PathLike = None, pickle_protocol: int = None) -> None:
         """
         Args:
             directory: the directory where the files will be saved. The directory will be created if it does not exist.
-            pickle_protocol: the protocol used when pickling files
+                       If None, use the global default `cache.filesystem.directory`
+            pickle_protocol: the protocol used when pickling files. If None, use the global default 
+                             `cache.pickle_protocol`
         """
 
         self.__directory = pathlib.Path(directory if directory is not None else defaults["cache.filesystem.directory"])
         self.__directory.mkdir(parents=True, exist_ok=True)
 
-        self.__pickle_protocol = pickle_protocol
+        self.__pickle_protocol = pickle_protocol if pickle_protocol is not None else defaults["cache.pickle_protocol"]
 
     def get_file_path(self, context_id: str) -> pathlib.Path:
         """

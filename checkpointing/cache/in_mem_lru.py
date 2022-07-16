@@ -15,7 +15,7 @@ class InMemoryLRUCache(CacheBase):
        means that any change on the saved/retrieved object will affect the objects to be retrieved with the
        same context id later on.
     3. Using this cache with any identifier that considers the parameter values is an analog to the built-
-       in `functools.lru_cache`. This module is mostly built for testing purpose, because the built-in function
+       in `functools.lru_cache`. This module is mostly built for testing purpose, as the built-in function
        should be much faster and is thus recommended to use. However, this might be useful in some cases, For
        example, ignoring some parameters on purpose. In such case you could use a custom identifier together
        with this cache.
