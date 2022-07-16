@@ -1,6 +1,6 @@
 import pandas as pd
 from typing import Union
-from checkpointing.hash._numpy import hash_numpy_array
+from checkpointing.hash.specific._numpy import hash_numpy_array
 from checkpointing.hash._typing import Hash
 
 

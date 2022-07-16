@@ -18,3 +18,6 @@ class GlobalStatementError(RuntimeError):
 
 class NonlocalStatementError(RuntimeError):
     pass
+
+class HashFailedError(RuntimeError):
+    pass

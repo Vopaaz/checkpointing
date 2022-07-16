@@ -3,7 +3,7 @@ from checkpointing.identifier.func_call.context import FuncCallContext
 
 
 def assert_id_neq(c1: FuncCallContext, c2: FuncCallContext):
-    ahi = AutoHashIdentifier(unify_code=True)
+    ahi = AutoHashIdentifier()
     assert ahi.identify(c1) != ahi.identify(c2)
 
 def test_change_argument_default_value():

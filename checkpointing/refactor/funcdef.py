@@ -15,7 +15,6 @@ class FunctionDefinitionUnifier:
             (
                 ast.FunctionDef,
                 ast.AsyncFunctionDef,
-                ast.Lambda,
             ),
         ):
             raise RefactorFailedError(f"The given code is not a single function definition: {func_definition}")
@@ -41,7 +40,7 @@ class FunctionDefinitionUnifier:
         return self.transformer.root_function_args_renaming
 
     @property
-    def nonlocal_variables_renaming(self) -> List[str]:
+    def nonlocal_variables_renaming(self) -> Dict[str, str]:
         """
         Dictionary of the renaming of nonlocal variables referenced by the function.
 
