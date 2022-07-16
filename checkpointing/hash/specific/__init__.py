@@ -35,10 +35,10 @@ def register_hasher(class_: Any, hasher: Callable):
     hashers[class_] = hasher
 
 
-def hash_with_specific(hash_base: Hash, obj: Any):
+def hash_with_specific(obj: Any):
     if type(obj) in hashers:
         hash_fn = hashers[type(obj)]
-        return hash_fn(hash_base, obj)
+        return hash_fn(obj)
     else:
         raise HashFailedError(f"No registered hasher found for type: {type(obj)}")
 

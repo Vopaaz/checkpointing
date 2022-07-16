@@ -2,40 +2,38 @@ from typing import Any
 import dill
 from checkpointing.hash._typing import Hash
 from types import ModuleType, FunctionType
-import pathlib
 import inspect
 from checkpointing.refactor.funcdef import FunctionDefinitionUnifier
-from checkpointing.exceptions import HashFailedError
+from checkpointing.exceptions import HashFailedWarning
 from types import GeneratorType
-import ast
+from warnings import warn
 
 
-def hash_bytes(hash_base: Hash, bytes_: bytes) -> Hash:
-    hash_base.update(bytes_)
-    return hash_base
-
-
-def hash_string(hash_base: Hash, s: str) -> Hash:
+def hash_string(s: str) -> bytes:
     bytes = s.encode("utf-8")
-    return hash_bytes(hash_base, bytes)
+    return bytes
 
 
-def hash_with_dill(hash_base: Hash, obj: Any, pickle_protocol: int):
-    bytes_ = dill.dumps(obj, protocol=pickle_protocol, byref=True, recurse=False)
-    return hash_bytes(hash_base, bytes_)
+def hash_with_dill(obj: Any, pickle_protocol: int) -> bytes:
+    return dill.dumps(obj, protocol=pickle_protocol, byref=True, recurse=False)
 
 
-def hash_generator(hash_base: Hash, generator: GeneratorType):
+def hash_generator(generator: GeneratorType) -> bytes:
     return hash_string(generator.__qualname__)
 
 
-def hash_generic(hash_base: Hash, obj: Any, pickle_protocol: int):
+def hash_generic(obj: Any, pickle_protocol: int):
     try:
-        return hash_with_dill(hash_base, obj, pickle_protocol)
+        return hash_with_dill(obj, pickle_protocol)
     except:
         pass
 
     if inspect.isgenerator(obj):
-        return hash_generator(hash_base, obj)
+        return hash_generator(obj)
 
-    raise HashFailedError(f"Cannot hash object of type: {type(obj)}")
+    warn(
+        f"No generic hasher found for type: {type(obj)}, using its direct string representation as has value. "
+        "This could lead to incorrect results",
+        category=HashFailedWarning,
+    )
+    return hash_string(str(obj))

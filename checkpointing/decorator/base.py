@@ -142,7 +142,6 @@ class DecoratorCheckpoint(ABC, Generic[ReturnValue]):
                 f"({checkpoint_time:.2f}s > {run_time:.2f}s). "
                 "Consider optimize the checkpoint or just remove it, and let the function execute every time.",
                 category=ExpensiveOverheadWarning,
-                stacklevel=3,
             )
 
     def __timed_safe_retrieve(self, context: FuncCallContext, context_id: ContextId) -> Tuple[bool, ReturnValue, float]:

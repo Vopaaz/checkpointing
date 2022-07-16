@@ -1,5 +1,6 @@
 from checkpointing.identifier.func_call.hash import AutoHashIdentifier
 from checkpointing.identifier.func_call.context import FuncCallContext
+import inspect
 
 
 def assert_id_eq(c1: FuncCallContext, c2: FuncCallContext):
@@ -57,3 +58,54 @@ def test_swap_argument_order():
     c2 = FuncCallContext(bar, (2, 1), {})
 
     assert_id_eq(c1, c2)
+
+def test_referencing_renamed_global_variable():
+
+    a = 0
+    b = 0
+
+    def foo():
+        return a
+
+    def bar():
+        return b
+
+    c1 = FuncCallContext(foo, (), {}, inspect.currentframe())
+    c2 = FuncCallContext(bar, (), {}, inspect.currentframe())
+
+    assert_id_eq(c1, c2)
+
+def test_referencing_same_other_function():
+
+    def baz():
+        return
+
+    def foo():
+        return baz()
+
+    def bar():
+        return baz()
+
+    c1 = FuncCallContext(foo, (), {}, inspect.currentframe())
+    c2 = FuncCallContext(bar, (), {}, inspect.currentframe())
+
+    assert_id_eq(c1, c2)
+
+def test_internal_lambda_referecing_same_global_variable_but_renamed():
+
+    a = 0
+    b = 0
+
+    def foo(t):
+        f = lambda x: x + a
+        return f(t)
+
+    def bar(t):
+        f = lambda x: x + b
+        return f(t)
+
+    c1 = FuncCallContext(foo, (0,), {}, inspect.currentframe())
+    c2 = FuncCallContext(bar, (0,), {}, inspect.currentframe())
+
+    assert_id_eq(c1, c2)
+    

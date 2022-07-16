@@ -2,16 +2,11 @@ from checkpointing.refactor.funcdef import FunctionDefinitionUnifier
 from typing import Tuple, List
 
 
-def assert_ast_eq(c1: str, c2: str, eq_args: List[Tuple] = [], eq_nonlocal: List[Tuple]= []):
+def assert_ast_eq(c1: str, c2: str):
     u1 = FunctionDefinitionUnifier(c1)
     u2 = FunctionDefinitionUnifier(c2)
     assert u1.unified_ast_dump == u2.unified_ast_dump
 
-    for v1, v2 in eq_args:
-        assert u1.args_renaming[v1] == u2.args_renaming[v2]
-
-    for v1, v2 in eq_nonlocal:
-        assert u1.nonlocal_variables_renaming[v1] == u2.nonlocal_variables_renaming[v2]
 
 def test_add_type_annotation():
     c1 = """
@@ -189,6 +184,73 @@ def test_complex_aug_assign():
     c2 = """
     def foo(a):
         a.b["c"] = a.b["c"] + a.d["e"]
+    """
+
+    assert_ast_eq(c1, c2)
+
+def test_equivalent_internal_lambda_logic():
+    c1 = """
+    def foo(a):
+        f = lambda x: x + 1
+        return f(a)
+    """
+
+    c2 = """
+    def foo(a):
+        f = lambda n: n + 1
+        return f(a)
+    """
+
+    assert_ast_eq(c1, c2)
+
+def test_async_function_def():
+    c1 = """
+    async def foo():
+        pass
+    """
+
+    c2 = """
+    async def bar():
+        pass
+    """
+    
+    assert_ast_eq(c1, c2)
+
+def test_assign_tuple():
+    c1 = """
+    def foo():
+        (a1, a2) = (t1, t2)
+    """
+
+    c2 = """
+    def bar():
+        (x1, x2) = (t1, t2)
+    """
+
+    assert_ast_eq(c1, c2)
+
+def test_assign_list():
+    c1 = """
+    def foo():
+        [a1, a2] = baz
+    """
+
+    c2 = """
+    def bar():
+        [x1, x2] = baz
+    """
+
+    assert_ast_eq(c1, c2)
+
+def test_assign_starred():
+    c1 = """
+    def foo():
+        [a1, *a2] = baz
+    """
+
+    c2 = """
+    def bar():
+        [x1, *x2] = baz
     """
 
     assert_ast_eq(c1, c2)

@@ -19,8 +19,6 @@ def test_get_nonlocal_variable_with_global_variable():
     def foo():
         pass
 
-    x = 1
-
     ctx = FuncCallContext(foo, (), {}, inspect.currentframe())
     assert ctx.get_nonlocal_variable("globvar") == 2
 

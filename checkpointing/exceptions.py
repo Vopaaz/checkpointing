@@ -21,3 +21,6 @@ class NonlocalStatementError(RuntimeError):
 
 class HashFailedError(RuntimeError):
     pass
+
+class HashFailedWarning(UserWarning):
+    pass

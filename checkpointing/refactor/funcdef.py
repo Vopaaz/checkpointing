@@ -158,7 +158,10 @@ class _FunctionDefinitionTransformer(ast.NodeTransformer):
         node: Union[ast.FunctionDef, ast.AsyncFunctionDef, ast.Lambda],
     ) -> Union[ast.FunctionDef, ast.AsyncFunctionDef, ast.Lambda]:
 
-        new_function_name = self.unify_name(node, self.current_closure_local_variables)
+        if isinstance(node, ast.Lambda):
+            new_function_name = next(self.local_names)
+        else:
+            new_function_name = self.unify_name(node, self.current_closure_local_variables)
 
         local_vars = {}
         args: List[ast.arg] = []
@@ -255,7 +258,7 @@ class _FunctionDefinitionTransformer(ast.NodeTransformer):
         return assign
 
     def visit_Lambda(self, node: ast.Lambda) -> ast.Lambda:
-        self.visit_AnyFunctionDef(node)
+        return self.visit_AnyFunctionDef(node)
 
 
 class _ContextStoreToLoadTransformer(ast.NodeTransformer):
