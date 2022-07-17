@@ -3,3 +3,6 @@ apidoc:
 
 test:
 	pytest tests/ checkpointing/
+
+integ:
+	python -m integtests.run

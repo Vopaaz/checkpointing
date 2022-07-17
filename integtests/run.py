@@ -8,7 +8,9 @@ from termcolor import cprint
 
 cwd = pathlib.Path().cwd()
 workspace = pathlib.Path("testworkspace")
-checkpoints = pathlib.Path(defaults["cache.filesystem.directory"])
+checkpointing_cache = pathlib.Path(defaults["cache.filesystem.directory"])
+cachier_cache = pathlib.Path("~").joinpath(".cachier")
+joblib_cache = pathlib.Path(".joblib")
 
 
 class TestDefinitionError(RuntimeError):
@@ -40,26 +42,36 @@ def sanitize(s: str):
     return s
 
 
-def run_case(case_name):
-
-    casepath = pathlib.Path(".").joinpath("integtests", case_name)
-    resourcepath = casepath.joinpath("resources")
-
+def remove_workspace():
     if workspace.exists():
         shutil.rmtree(workspace)
 
-    if checkpoints.exists():
-        shutil.rmtree(checkpoints)
 
+def refresh_workspace():
+    remove_workspace()
     workspace.mkdir()
 
-    if resourcepath.exists():  # Resource setup
-        for f in resourcepath.iterdir():
+
+def clear_cache():
+    for cache_dir in [checkpointing_cache, cachier_cache, joblib_cache]:
+        if cache_dir.exists():
+            shutil.rmtree(cache_dir)
+
+
+def run_case(case_path: pathlib.Path):
+
+    refresh_workspace()
+    clear_cache()
+
+    resource_path = case_path.joinpath("resources")
+
+    if resource_path.exists():  # Resource setup
+        for f in resource_path.iterdir():
             copy_file_to_workplace(f)
 
     for i in count():
-        wspath = casepath.joinpath(f"workspace{i}")
-        outputpath = casepath.joinpath("outputs", f"output{i}.txt")
+        wspath = case_path.joinpath("workspaces", f"workspace{i}")
+        outputpath = case_path.joinpath("outputs", f"output{i}.txt")
 
         if not wspath.exists():
             break
@@ -68,7 +80,7 @@ def run_case(case_name):
             copy_file_to_workplace(f)
 
         if not outputpath.exists():
-            raise TestDefinitionError(f"Case {i} for {case_name} has script definition, but no expected output")
+            raise TestDefinitionError(f"Case {i} for {case_path} has script definition, but no expected output")
 
         with open(outputpath, mode="r", encoding="utf-8") as f:
             expected = sanitize(f.read())
@@ -84,7 +96,7 @@ def run_case(case_name):
         if expected != actual:
             raise TestFailedError(
                 f"""
-Test failed in {case_name}, workspace{i}.
+Test failed in {case_path}, workspace{i}.
 
 <Expected>
 {expected}
@@ -97,16 +109,30 @@ Test failed in {case_name}, workspace{i}.
         for f in wspath.iterdir():  # Script teardown
             remove_file_in_workplace(f)
 
-    shutil.rmtree(workspace)
-
     if i == 0:
-        raise TestDefinitionError(f"No workspace exists for case {case}, at least 1 is expected.")
+        raise TestDefinitionError(f"No workspace exists for case {case_path}, at least 1 is expected.")
+
+
+def is_case(d: pathlib.Path):
+    for sub_d in d.iterdir():
+        if sub_d.is_dir() and sub_d.name not in ["outputs", "workspaces", "__pycache__"]:
+            return False
+
+    return True
 
 
 def find_cases():
-    for d in pathlib.Path(".").joinpath("integtests").iterdir():
+    q = list(pathlib.Path(".").joinpath("integtests").iterdir())
+
+    while q:
+        d = q.pop()
         if d.is_dir() and d.name != "__pycache__":
-            yield d
+            if is_case(d):
+                yield d
+            else:
+                for sub_d in d.iterdir():
+                    if sub_d.is_dir() and d.name != "__pycache__":
+                        q.append(sub_d)
 
 
 if __name__ == "__main__":
@@ -118,19 +144,18 @@ if __name__ == "__main__":
 
     for case in find_cases():
 
-        case_name = case.name
-        cprint(f"Running case: {case_name}", end=" ")
+        cprint(f"Running case: {case}", end=" ")
 
         try:
-            run_case(case_name)
+            run_case(case)
 
         except TestDefinitionError as e:
             cprint(f"Definition Error: {e}", "red")
-            failed.append(case_name)
+            failed.append(case)
 
         except TestFailedError as e:
             cprint(f"Failed: {e}", "red")
-            failed.append(case_name)
+            failed.append(case)
 
         else:
             cprint("Passed", "green")
@@ -140,4 +165,7 @@ if __name__ == "__main__":
     if failed:
         cprint(f"Total failed: {len(failed)}", "red")
         cprint("Failed tests:", "red")
-        cprint(", ".join(failed), "red")
+        cprint("\n".join([f"- {f}" for f in failed]), "red")
+
+    remove_workspace()
+    clear_cache()

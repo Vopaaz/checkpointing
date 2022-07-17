@@ -16,3 +16,7 @@ black==22.6.0
 
 # Integration test output
 termcolor==1.1.0
+
+# Integration test comparision
+cachier==1.5.4
+joblib==1.1.0

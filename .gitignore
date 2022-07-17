@@ -136,3 +136,4 @@ docs
 
 testworkspace/
 .checkpointing/
+.joblib/
