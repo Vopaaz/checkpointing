@@ -7,5 +7,5 @@ def calc(a, b):
     return a + b
 
 if __name__ == "__main__":
-    result = calc(1, 3) # Parameters have changed
+    result = calc(1, 3) # Parameters have changed, so the "calc is running for..." is printed
     print(f"result: {result}")
