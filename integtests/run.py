@@ -9,7 +9,7 @@ from termcolor import cprint
 cwd = pathlib.Path().cwd()
 workspace = pathlib.Path("testworkspace")
 checkpointing_cache = pathlib.Path(defaults["cache.filesystem.directory"])
-cachier_cache = pathlib.Path("~").joinpath(".cachier")
+cachier_cache = pathlib.Path().home().joinpath(".cachier")
 joblib_cache = pathlib.Path(".joblib")
 
 
@@ -95,9 +95,7 @@ def run_case(case_path: pathlib.Path):
 
         if expected != actual:
             raise TestFailedError(
-                f"""
-Test failed in {case_path}, workspace{i}.
-
+                f"""Test failed in {case_path}, workspace{i}.
 <Expected>
 {expected}
 
