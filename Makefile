@@ -1,8 +1,15 @@
-apidoc:
-	pdoc checkpointing -o ./docs/api --docformat google
+test: unit integ
 
-test:
+unit:
 	pytest tests/ checkpointing/
 
 integ:
 	python -m integtests.run
+
+doc: mandoc apidoc
+
+mandoc:
+	cd docs && mkdocs build
+
+apidoc:
+	pdoc checkpointing -o ./apidoc --docformat google

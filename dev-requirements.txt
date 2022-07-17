@@ -1,22 +1,22 @@
-# Build or testing tools
-
-pdoc==12.0.2
+# Unit tests
 pytest==7.1.2
 pytest-cov==3.0.0
 coverage==6.2
 
 # External hashing library
-
 numpy==1.21.5
 pandas==1.3.5
 
 # Formatting
-
 black==22.6.0
 
 # Integration test output
 termcolor==1.1.0
 
-# Integration test comparision
+# Similar packages for integration test comparision
 cachier==1.5.4
 joblib==1.1.0
+
+# Documentation
+pdoc==12.0.2
+mkdocs==1.3.0
