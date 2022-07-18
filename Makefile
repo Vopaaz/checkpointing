@@ -8,6 +8,9 @@ integ:
 
 doc: mandoc apidoc
 
+mandoc-serve:
+	cd docs && mkdocs serve
+
 mandoc:
 	cd docs && mkdocs build
 

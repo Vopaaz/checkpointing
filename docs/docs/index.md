@@ -1,17 +1,170 @@
-# Welcome to MkDocs
+## Welcome to checkpointing
 
-For full documentation visit [mkdocs.org](https://www.mkdocs.org).
+Persistent cache for long-running Python functions.
 
-## Commands
+- [Welcome to checkpointing](#welcome-to-checkpointing)
+- [Introduction](#introduction)
+    - [Use cases](#use-cases)
+- [Installation](#installation)
+- [Basic usage](#basic-usage)
+    - [Create a checkpoint](#create-a-checkpoint)
+    - [Configure the checkpoint](#configure-the-checkpoint)
+        - [Cache directory](#cache-directory)
+        - [Behavior on internal error](#behavior-on-internal-error)
+        - [Change hash algorithm](#change-hash-algorithm)
+        - [Global setting](#global-setting)
+- [Usage notes](#usage-notes)
 
-* `mkdocs new [dir-name]` - Create a new project.
-* `mkdocs serve` - Start the live-reloading docs server.
-* `mkdocs build` - Build the documentation site.
-* `mkdocs -h` - Print help message and exit.
+## Introduction
 
-## Project layout
+`checkpointing` provides a decorator which allows you to cache the return value of a [pure function](https://en.wikipedia.org/wiki/Pure_function#Compiler_optimizations)[^1] on the disk. 
+When the function is called later with the same parameters, it automatically skips the function execution,
+retrieves the cached value and return.
 
-    mkdocs.yml    # The configuration file.
-    docs/
-        index.md  # The documentation homepage.
-        ...       # Other markdown pages, images and other files.
+For example,
+
+```python
+from checkpointing import checkpoint
+
+@checkpoint()
+def calc(a, b):
+    print(f"calc is running for {a}, {b}")
+    return a + b
+
+if __name__ == "__main__":
+    result = calc(1, 2)
+    print(f"result: {result}")
+```
+
+Run this script, and the output will be
+
+```text
+calc is running for 1, 2
+result: 3
+```
+
+Now the return value has been cached to disk, and if you run this script again, the output will be
+
+```text
+result: 3
+```
+
+The execution of `calc` has been skipped, but the result value is retrieved from the disk and returned as normal.
+
+However, if the function call context has changed, the function will be re-executed and return the new value.
+For example, 
+
+- if it is passed with different arguments, e.g. `calc(1, 3)`, `calc` would rerun and return `4`.
+- if the code logic has changed, e.g. `return a - b`, `calc` would rerun and return `-1`.
+
+The package has a wise built-in strategy to decide when it needs or doesn't need to re-execute the function.
+More details are discussed in the [Cases when function is skipped/re-executed](re-exec.md) page.
+This is also the main advantage of `checkpointing` comparing to other similar packages,
+see the [Comparing with similar packages](comparison.md) page.
+
+### Use cases
+
+The built-in `checkpoint` is designed for local development which involves long-running [pure functions](https://en.wikipedia.org/wiki/Pure_function#Compiler_optimizations)[^1].
+Such use cases are common in machine learning and deep learning.
+
+
+## Installation
+
+This package is available on PyPI, so you can easily install it with `pip`
+
+```shell
+$ pip install checkpointing
+```
+
+## Basic usage
+
+### Create a checkpoint
+
+Import the `checkpoint` from this package and use it as the decorator of any pure function
+(notice the `()` after `checkpoint`)
+
+```python
+from checkpointing import checkpoint
+
+@checkpoint()
+def foo():
+    return 0
+```
+
+After that, `foo` will be able to automatically handle the caching, skipping, 
+and re-executing as described previously.
+You can call `foo` in the same way as you normally would.
+
+### Configure the checkpoint
+
+#### Cache directory
+
+By default, the results are saved as pickle files in `./.checkpointing/`,
+if you want to store them elsewhere, you can do
+
+```python
+@checkpoint(directory="other_dir")
+```
+
+#### Behavior on internal error
+
+During the execution, there could be unexpected errors within the checkpoint.
+When this happens, the normal behavior is to give you a warning,
+and just rerun the function without the caching stuff.
+This ensures that your code won't fail because of using this package.
+However, you can change this behavior with the `on_error` option.
+
+```python
+@checkpoint(on_error="raise")
+```
+
+This will terminate the function call and raise the internal error.
+
+```python
+@checkpoint(on_error="ignore")
+```
+
+This will just let the function rerun every time, without raising any warning.
+
+
+#### Change hash algorithm
+ 
+Internally the checkpoint hashes every factor related to the return value and use the hash value
+to determine if there is cache for the result of a function call.
+The hash algorithm used determines the speed and collision probability (without malicious intention, this shouldn't be a problem) of such process.
+The default is `md5`, but you can switch to any other algorithms supported by [hashlib](https://docs.python.org/3/library/hashlib.html)
+
+```python
+@checkpoint(algorithm="sha256")
+```
+
+#### Global setting
+
+You can change the above-mentioned configurations for all checkpoints by modifying a global dictionary.
+
+```python
+from checkpointing import defaults
+
+defaults["cache.filesystem.directory"] = "other_dir"
+defaults["hash.algorithm"] = "sha256"
+defaults["checkpoint.on_error"] = "ignore"
+```
+
+Please set this at the top-level of your module/script, before you create any `checkpoint`.
+
+## Usage notes
+
+Please be aware that
+
+- Since the function will be skipped if it was cached before, user shouldn't mutate an argument in the function body
+    (as required by the definition of pure function).
+- If the project involves randomness, it's the user's responsibility to set the random seed or random state, 
+    such that the arguments and reference global variables of the cached function are exactly identical
+
+
+
+[^1]: We take the alternative definition of the "pure function", meaning that it only has property 2:
+"the function has no side effects (no mutation of local static variables, non-local variables, 
+mutable reference arguments or input/output streams)".
+We do allow the return value to vary due to changes in non-local variables and other factors,
+as it's often the case in project development.

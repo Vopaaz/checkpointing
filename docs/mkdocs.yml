@@ -1,1 +1,12 @@
-site_name: My Docs
+site_name: Documentation - checkpointing
+
+theme:
+  name: readthedocs
+
+nav:
+  - "User Guide": index.md
+  - "Cases when function is skipped/re-executed": re-exec.md
+  - "Comparing with similar packages": comparison.md
+
+markdown_extensions:
+  - footnotes
