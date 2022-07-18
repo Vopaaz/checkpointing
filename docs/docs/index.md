@@ -1,8 +1,7 @@
-## Welcome to checkpointing
+# Welcome to checkpointing
 
 Persistent cache for long-running Python functions.
 
-- [Welcome to checkpointing](#welcome-to-checkpointing)
 - [Introduction](#introduction)
     - [Use cases](#use-cases)
 - [Installation](#installation)
@@ -17,7 +16,7 @@ Persistent cache for long-running Python functions.
 
 ## Introduction
 
-`checkpointing` provides a decorator which allows you to cache the return value of a [pure function](https://en.wikipedia.org/wiki/Pure_function#Compiler_optimizations)[^1] on the disk. 
+`checkpointing` provides a decorator which allows you to cache the return value of a [pure function](https://en.wikipedia.org/wiki/Pure_function#Compiler_optimizations)[^1] on the disk.
 When the function is called later with the same parameters, it automatically skips the function execution,
 retrieves the cached value and return.
 
@@ -52,20 +51,33 @@ result: 3
 The execution of `calc` has been skipped, but the result value is retrieved from the disk and returned as normal.
 
 However, if the function call context has changed, the function will be re-executed and return the new value.
-For example, 
+For example,
 
-- if it is passed with different arguments, e.g. `calc(1, 3)`, `calc` would rerun and return `4`.
-- if the code logic has changed, e.g. `return a - b`, `calc` would rerun and return `-1`.
+- if it is passed with different arguments, e.g. `calc(1, 3)`, `calc` would rerun and return `4`
+- if the code logic has changed, e.g. `return a - b`, `calc` would rerun and return `-1`
 
-The package has a wise built-in strategy to decide when it needs or doesn't need to re-execute the function.
-More details are discussed in the [Cases when function is skipped/re-executed](re-exec.md) page.
+The `checkpoint` has a wise built-in strategy to decide when it needs or doesn't need to re-execute the function.
+More details are discussed in the [Cases when function is skipped/re-executed](cases.md) page.
 This is also the main advantage of `checkpointing` comparing to other similar packages,
 see the [Comparing with similar packages](comparison.md) page.
 
+!!! attention
+    However, there are some cases where the rerun decision cannot be correctly made.
+    Please read through the [cases](cases.md) page
+    and avoid the patterns that are marked as "Known caveats".
+
+
 ### Use cases
 
-The built-in `checkpoint` is designed for local development which involves long-running [pure functions](https://en.wikipedia.org/wiki/Pure_function#Compiler_optimizations)[^1].
-Such use cases are common in machine learning and deep learning.
+The built-in `checkpoint` is designed for projects that
+
+- runs in a local development environment
+- involves repeatedly executing long-running
+[pure functions](https://en.wikipedia.org/wiki/Pure_function#Compiler_optimizations)[^1]
+on the same set of arguments
+- are somewhat "experimental", so it involves a lot of code changes back and forth
+
+Such use cases are very common in machine learning project, for example.
 
 
 ## Installation
@@ -80,7 +92,7 @@ $ pip install checkpointing
 
 ### Create a checkpoint
 
-Import the `checkpoint` from this package and use it as the decorator of any pure function
+Import the `checkpoint` from this package and use it as the decorator of a function
 (notice the `()` after `checkpoint`)
 
 ```python
@@ -91,7 +103,7 @@ def foo():
     return 0
 ```
 
-After that, `foo` will be able to automatically handle the caching, skipping, 
+After that, `foo` will be able to automatically handle the caching, skipping,
 and re-executing as described previously.
 You can call `foo` in the same way as you normally would.
 
@@ -128,7 +140,7 @@ This will just let the function rerun every time, without raising any warning.
 
 
 #### Change hash algorithm
- 
+
 Internally the checkpoint hashes every factor related to the return value and use the hash value
 to determine if there is cache for the result of a function call.
 The hash algorithm used determines the speed and collision probability (without malicious intention, this shouldn't be a problem) of such process.
@@ -157,14 +169,17 @@ Please set this at the top-level of your module/script, before you create any `c
 Please be aware that
 
 - Since the function will be skipped if it was cached before, user shouldn't mutate an argument in the function body
-    (as required by the definition of pure function).
-- If the project involves randomness, it's the user's responsibility to set the random seed or random state, 
-    such that the arguments and reference global variables of the cached function are exactly identical
+  (as required by the definition of pure function)
+- If the project involves randomness, it's the user's responsibility to set the random seed or random state,
+  such that the arguments and reference global variables of the cached function are exactly identical
+- The built-in strategy to determine if a function needs to be re-executed is imperfect.
+  Please see the caveats section in [Cases when function is skipped/re-executed](cases.md),
+  and avoid those cases when the rerun condition cannot be correctly determined.
 
 
 
 [^1]: We take the alternative definition of the "pure function", meaning that it only has property 2:
-"the function has no side effects (no mutation of local static variables, non-local variables, 
+"the function has no side effects (no mutation of local static variables, non-local variables,
 mutable reference arguments or input/output streams)".
 We do allow the return value to vary due to changes in non-local variables and other factors,
 as it's often the case in project development.

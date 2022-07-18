@@ -1,4 +1,4 @@
-import pandas as pd
+import numpy as np
 from checkpointing import checkpoint
 
 @checkpoint()
@@ -6,7 +6,7 @@ def foo(x):
     return x
 
 if __name__ == "__main__":
-    df = pd.DataFrame() # supports pandas DataFrame as arguments
+    df = np.arange(1) # supports pandas DataFrame as arguments
     try:
         foo(df)
     except:

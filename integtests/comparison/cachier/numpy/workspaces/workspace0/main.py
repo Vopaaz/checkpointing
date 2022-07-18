@@ -1,4 +1,4 @@
-import pandas as pd
+import numpy as np
 from cachier import cachier
 
 @cachier()
@@ -6,7 +6,7 @@ def foo(x):
     return x
 
 if __name__ == "__main__":
-    df = pd.DataFrame() # does not support pandas DataFrame as arguments
+    df = np.arange(1) # does not support pandas DataFrame as arguments
     try:
         foo(df)
     except TypeError as e:
