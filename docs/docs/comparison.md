@@ -43,7 +43,7 @@ Rerun the script again and the output is still `1`, which is incorrect.
 Replace cachier with checkpointing, the second execution of the script will rerun `foo`,
 and gives the correct result, `-1`.
 
-### Limited hash types
+### Limited hashable types
 
 cachier can only work on very limited data types as arguments.
 

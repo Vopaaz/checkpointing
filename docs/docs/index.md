@@ -57,14 +57,13 @@ For example,
 - if the code logic has changed, e.g. `return a - b`, `calc` would rerun and return `-1`
 
 The `checkpoint` has a wise built-in strategy to decide when it needs or doesn't need to re-execute the function.
-More details are discussed in the [Cases when function is skipped/re-executed](cases.md) page.
+More details are discussed in the [Use Cases](cases.md) page.
 This is also the main advantage of `checkpointing` comparing to other similar packages,
 see the [Comparing with similar packages](comparison.md) page.
 
 !!! attention
     However, there are some cases where the rerun decision cannot be correctly made.
-    Please read through the [cases](cases.md) page
-    and avoid the patterns that are marked as "Known caveats".
+    Please read through the [Known Caveats](caveats.md) page and avoid those patterns.
 
 
 ### Use cases

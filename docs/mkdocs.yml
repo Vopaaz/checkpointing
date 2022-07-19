@@ -5,8 +5,9 @@ theme:
 
 nav:
   - "User Guide": index.md
-  - "Cases when function is skipped/re-executed": cases.md
-  - "Comparison with similar packages": comparison.md
+  - "Use Cases": cases.md
+  - "Known Caveats": caveats.md
+  - "Comparison with Similar Packages": comparison.md
 
 markdown_extensions:
   - footnotes
