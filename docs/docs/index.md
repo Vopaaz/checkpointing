@@ -57,7 +57,7 @@ For example,
 - if the code logic has changed, e.g. `return a - b`, `calc` would rerun and return `-1`
 
 The `checkpoint` has a wise built-in strategy to decide when it needs or doesn't need to re-execute the function.
-More details are discussed in the [Use Cases](cases.md) page.
+More details are discussed in the [Behavior on Code Change](behavior.md) page.
 This is also the main advantage of `checkpointing` comparing to other similar packages,
 see the [Comparing with similar packages](comparison.md) page.
 
@@ -76,7 +76,7 @@ The built-in `checkpoint` is designed for projects that
 on the same set of arguments
 - are somewhat "experimental", so it involves a lot of code changes back and forth
 
-Such use cases are very common in machine learning project, for example.
+Such use cases are very common in the preliminary stage of machine learning projects, for example.
 
 
 ## Installation
@@ -172,7 +172,7 @@ Please be aware that
 - If the project involves randomness, it's the user's responsibility to set the random seed or random state,
   such that the arguments and reference global variables of the cached function are exactly identical
 - The built-in strategy to determine if a function needs to be re-executed is imperfect.
-  Please see the caveats section in [Cases when function is skipped/re-executed](cases.md),
+  Please see the [Known Caveats](caveats.md),
   and avoid those cases when the rerun condition cannot be correctly determined.
 
 

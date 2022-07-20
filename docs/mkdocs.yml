@@ -5,7 +5,7 @@ theme:
 
 nav:
   - "User Guide": index.md
-  - "Use Cases": cases.md
+  - "Behavior on Code Change": behavior.md
   - "Known Caveats": caveats.md
   - "Comparison with Similar Packages": comparison.md
 
