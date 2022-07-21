@@ -24,7 +24,7 @@ class TestFailedError(RuntimeError):
 
 def copy_file_to_workplace(f: pathlib.Path):
     if f.is_file():
-        shutil.copy(f, workspace.joinpath(f.name))
+        shutil.copyfile(f, workspace.joinpath(f.name))
     else:
         raise TestDefinitionError(f"{f} should be a file.")
 
@@ -86,17 +86,21 @@ def run_case(case_path: pathlib.Path):
         with open(outputpath, mode="r", encoding="utf-8") as f:
             expected = sanitize(f.read())
 
-        p = subprocess.run(
-            ["python", "-m", f"{workspace.name}.main"],
-            capture_output=True,
-            cwd=cwd,
-        )
+        try:
+            p = subprocess.run(
+                ["python", "-m", f"{workspace.name}.main"],
+                capture_output=True,
+                check=True,
+                cwd=cwd,
+            )
+        except subprocess.CalledProcessError as e:
+            raise TestFailedError(f"Test failed in {case_path}, workspace{i} because an exception is raised.\n" + e.stdout + "\n" + e.stderr)
 
         actual = sanitize(p.stdout.decode("utf-8"))
 
         if expected != actual:
             raise TestFailedError(
-                f"""Test failed in {case_path}, workspace{i}.
+                f"""Test failed in {case_path}, workspace{i} because the output does not match the expectation.
 <Expected>
 {expected}
 
@@ -107,8 +111,6 @@ def run_case(case_path: pathlib.Path):
 
         for f in wspath.iterdir():  # Script teardown
             remove_file_in_workplace(f)
-
-        time.sleep(0.1) # For some reason sometime the test would fail if not waiting for a while
 
     if resource_path.exists():  # Resource teardown
         for f in resource_path.iterdir():
