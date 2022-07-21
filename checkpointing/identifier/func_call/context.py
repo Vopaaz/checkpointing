@@ -10,13 +10,13 @@ class FuncCallContext:
     Context of information for a function call.
     """
 
-    def __init__(self, func: Callable[..., ReturnValue], args: Tuple, kwargs: Dict, caller_frame: FrameType = None) -> None:
+    def __init__(self, func: Callable[..., ReturnValue], args: Tuple, kwargs: Dict, def_frame: FrameType = None,) -> None:
         """
         Args:
             func: the function object that is being called
             args: the non-keywords arguments of the function call
             kwargs: the keyword arguments of the function call
-            call_frame: the frame where the function is called
+            def_frame: the frame where the function is defined
         """
 
         self.__func: Callable[..., ReturnValue] = func
@@ -24,9 +24,9 @@ class FuncCallContext:
         self.__kwargs: Dict = kwargs
         self.__signature = inspect.signature(self.__func)
 
-        if caller_frame is not None:
-            self.__globals = copy.copy(caller_frame.f_globals)
-            self.__locals = copy.copy(caller_frame.f_locals)
+        if def_frame is not None:
+            self.__globals = copy.copy(def_frame.f_globals)
+            self.__locals = copy.copy(def_frame.f_locals)
 
         else:
             self.__globals = None

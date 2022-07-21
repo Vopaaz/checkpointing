@@ -32,7 +32,7 @@ def hash_generic(obj: Any, pickle_protocol: int):
         return hash_generator(obj)
 
     warn(
-        f"No generic hasher found for type: {type(obj)}, using its direct string representation as has value. "
+        f"No generic hasher found for object: {str(obj)} of type: {type(obj)}, using its direct string representation as hash value. "
         "This could lead to incorrect results",
         category=HashFailedWarning,
     )

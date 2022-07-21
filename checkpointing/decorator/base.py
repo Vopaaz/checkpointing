@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from functools import wraps
 from typing import Callable, Dict, Generic, List, Tuple, TypeVar
+from types import FrameType
 from warnings import warn
 
 from checkpointing.exceptions import CheckpointNotExist, ExpensiveOverheadWarning, CheckpointFailedWarning, CheckpointFailedError
@@ -43,6 +44,8 @@ class DecoratorCheckpoint(ABC, Generic[ReturnValue]):
         self.__on_error: str = on_error
         """The behavior when identification, saving or retrieval raises unexpected exceptions."""
 
+        self.__definition_frame: FrameType = None
+
         self.__validate_params()
 
     def __validate_params(self):
@@ -60,32 +63,25 @@ class DecoratorCheckpoint(ABC, Generic[ReturnValue]):
         """Magic method invoked when used as a decorator."""
         logger.debug(f"{self.__class__.__name__} created for {func.__qualname__}")
 
+        current_frame = inspect.currentframe()
+        self.__definition_frame = current_frame.f_back if current_frame is not None else None
+
         inner = self.__create_inner(func)
 
         self.__bind_rerun(func, inner)
 
         return inner
 
-    def __get_context_and_id(self, func, args, kwargs, current_frame):
-        context = FuncCallContext(
-            func,
-            args,
-            kwargs,
-            current_frame.f_back if current_frame is not None else None,
-        )
+    def __get_context_and_id(self, func, args, kwargs):
+        context = FuncCallContext(func, args, kwargs, self.__definition_frame)
         context_id = self.__identifier.identify(context)
         return context, context_id
 
     def __create_inner(self, func: Callable[..., ReturnValue]) -> Callable[..., ReturnValue]:
         @wraps(func)
         def inner(*args, **kwargs) -> ReturnValue:
-            context, context_id = self.__get_context_and_id(
-                func,
-                args,
-                kwargs,
-                inspect.currentframe(),
-            )
 
+            context, context_id = self.__get_context_and_id(func, args, kwargs)
             retrieve_success, res, retrieve_time = self.__timed_safe_retrieve(context, context_id)
 
             if retrieve_success:
@@ -106,12 +102,7 @@ class DecoratorCheckpoint(ABC, Generic[ReturnValue]):
 
     def __bind_rerun(self, original_func: Callable[..., ReturnValue], inner_func: Callable[..., ReturnValue]) -> None:
         def rerun(*args, **kwargs) -> ReturnValue:
-            context, context_id = self.__get_context_and_id(
-                original_func,
-                args,
-                kwargs,
-                inspect.currentframe(),
-            )
+            context, context_id = self.__get_context_and_id(original_func, args, kwargs)
 
             logger.info(f"Forcing rerun of {original_func.__qualname__}(**{context.arguments})")
 

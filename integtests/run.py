@@ -5,6 +5,7 @@ import shutil
 import argparse
 from checkpointing import defaults
 from termcolor import cprint
+import time
 
 cwd = pathlib.Path().cwd()
 workspace = pathlib.Path("testworkspace")
@@ -107,6 +108,7 @@ def run_case(case_path: pathlib.Path):
         for f in wspath.iterdir():  # Script teardown
             remove_file_in_workplace(f)
 
+        time.sleep(0.1) # For some reason sometime the test would fail if not waiting for a while
 
     if resource_path.exists():  # Resource teardown
         for f in resource_path.iterdir():
@@ -182,3 +184,5 @@ if __name__ == "__main__":
 
     remove_workspace()
     clear_cache()
+
+    exit(len(failed))
