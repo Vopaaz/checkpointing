@@ -1,14 +1,8 @@
 from checkpointing import checkpoint
 
-X = 0
-
-
 @checkpoint()
-def foo(t):
+def foo(a):
     print("Running")
-    z = t + X
-    return z
-
 
 if __name__ == "__main__":
-    print(foo(1))
+    foo.rerun(1)

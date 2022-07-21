@@ -10,8 +10,9 @@ Persistent cache for long-running Python functions.
     - [Configure the checkpoint](#configure-the-checkpoint)
         - [Cache directory](#cache-directory)
         - [Behavior on internal error](#behavior-on-internal-error)
-        - [Change hash algorithm](#change-hash-algorithm)
+        - [Pickle Protocol](#pickle-protocol)
         - [Global setting](#global-setting)
+    - [Force rerun a checkpoint](#force-rerun-a-checkpoint)
 - [Usage notes](#usage-notes)
 
 ## Introduction
@@ -57,13 +58,16 @@ For example,
 - if the code logic has changed, e.g. `return a - b`, `calc` would rerun and return `-1`
 
 The `checkpoint` has a wise built-in strategy to decide when it needs or doesn't need to re-execute the function.
-More details are discussed in the [Behavior on Code Change](behavior.md) page.
+More details are discussed in [Behavior on Code Change](behavior.md).
 This is also the main advantage of `checkpointing` comparing to other similar packages,
-see the [Comparing with similar packages](comparison.md) page.
+see [Comparing with similar packages](comparison.md).
 
 !!! attention
     However, there are some cases where the rerun decision cannot be correctly made.
     Please read through the [Known Caveats](caveats.md) page and avoid those patterns.
+
+Although the package focuses on persisting the cache across different executions,
+it also works if you call the same function multiple times within one execution.
 
 
 ### Use cases
@@ -138,15 +142,14 @@ This will terminate the function call and raise the internal error.
 This will just let the function rerun every time, without raising any warning.
 
 
-#### Change hash algorithm
+#### Pickle Protocol
 
-Internally the checkpoint hashes every factor related to the return value and use the hash value
-to determine if there is cache for the result of a function call.
-The hash algorithm used determines the speed and collision probability (without malicious intention, this shouldn't be a problem) of such process.
-The default is `md5`, but you can switch to any other algorithms supported by [hashlib](https://docs.python.org/3/library/hashlib.html)
+The function return value will be saved with the built-in [pickle](https://docs.python.org/3/library/pickle.html) module.
+We use the `pickle.DEFAULT_PROTOCOL` by default. 
+However, if you want to change the protocol used, you could use the `cache_pickle_protocol` option.
 
 ```python
-@checkpoint(algorithm="sha256")
+@checkpoint(cache_pickle_protocol=pickle.HIGHEST_PROTOCOL)
 ```
 
 #### Global setting
@@ -157,11 +160,28 @@ You can change the above-mentioned configurations for all checkpoints by modifyi
 from checkpointing import defaults
 
 defaults["cache.filesystem.directory"] = "other_dir"
-defaults["hash.algorithm"] = "sha256"
 defaults["checkpoint.on_error"] = "ignore"
+defaults["cache.pickle_protocol"] = pickle.HIGHEST_PROTOCOL
 ```
 
 Please set this at the top-level of your module/script, before you create any `checkpoint`.
+
+
+### Force rerun a checkpoint
+
+You can force rerun a checkpointed function with
+
+```python
+foo.rerun(args)
+```
+
+where `foo` is the decorated function.
+This would be equivalent to force invoking `foo(args)`.
+
+Note that the return value of this rerun will be cached to the disk and overwrite the previous value.
+
+This is useful if some factors that would affect the function return value has changed,
+but `checkpoint` failed to capture this difference, as described in the [Known Caveats](caveats.md).
 
 ## Usage notes
 

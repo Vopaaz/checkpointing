@@ -2,7 +2,7 @@ import subprocess
 from itertools import count
 import pathlib
 import shutil
-import textwrap
+import argparse
 from checkpointing import defaults
 from termcolor import cprint
 
@@ -135,6 +135,12 @@ def find_cases():
 
 if __name__ == "__main__":
 
+    parser = argparse.ArgumentParser()
+    parser.add_argument("keyword", nargs="?", type=str, help="Only run tests including this keyword", default=None)
+
+    args = parser.parse_args()
+    keyword = args.keyword
+
     cprint("Integration tests:")
 
     failed = []
@@ -143,6 +149,10 @@ if __name__ == "__main__":
     for case in find_cases():
 
         cprint(f"Running case: {case}", end=" ")
+
+        if keyword is not None and keyword not in str(case):
+            cprint("Skipped", "blue")
+            continue
 
         try:
             run_case(case)

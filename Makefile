@@ -4,7 +4,7 @@ unit:
 	pytest tests/ checkpointing/
 
 integ:
-	python -m integtests.run
+	python -m integtests.run $(kw)
 
 doc: mandoc apidoc
 

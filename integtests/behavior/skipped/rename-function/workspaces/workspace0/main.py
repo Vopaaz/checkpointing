@@ -1,13 +1,10 @@
 from checkpointing import checkpoint
 
-N = 0
-
 
 @checkpoint()
 def foo(a):
     print("Running")
-    b = a + N
-    return b
+    return a
 
 
 if __name__ == "__main__":
