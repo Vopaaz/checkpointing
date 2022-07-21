@@ -1,4 +1,4 @@
-# Comparison with similar packages
+# Comparison with Similar Packages
 
 Some other packages have similar functionality as `checkpointing`.
 However we handle some cases better than them, as explained below.

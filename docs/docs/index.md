@@ -2,19 +2,6 @@
 
 Persistent cache for long-running Python functions.
 
-- [Introduction](#introduction)
-    - [Use cases](#use-cases)
-- [Installation](#installation)
-- [Basic usage](#basic-usage)
-    - [Create a checkpoint](#create-a-checkpoint)
-    - [Configure the checkpoint](#configure-the-checkpoint)
-        - [Cache directory](#cache-directory)
-        - [Behavior on internal error](#behavior-on-internal-error)
-        - [Pickle Protocol](#pickle-protocol)
-        - [Global setting](#global-setting)
-    - [Force rerun a checkpoint](#force-rerun-a-checkpoint)
-- [Usage notes](#usage-notes)
-
 ## Introduction
 
 `checkpointing` provides a decorator which allows you to cache the return value of a [pure function](https://en.wikipedia.org/wiki/Pure_function#Compiler_optimizations)[^1] on the disk.
@@ -149,6 +136,8 @@ We use the `pickle.DEFAULT_PROTOCOL` by default.
 However, if you want to change the protocol used, you could use the `cache_pickle_protocol` option.
 
 ```python
+import pickle
+
 @checkpoint(cache_pickle_protocol=pickle.HIGHEST_PROTOCOL)
 ```
 
@@ -158,6 +147,7 @@ You can change the above-mentioned configurations for all checkpoints by modifyi
 
 ```python
 from checkpointing import defaults
+import pickle
 
 defaults["cache.filesystem.directory"] = "other_dir"
 defaults["checkpoint.on_error"] = "ignore"

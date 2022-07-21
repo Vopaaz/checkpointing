@@ -1,24 +1,15 @@
-# Use Cases
+# Behavior on Code Change
 
-This page describes different cases when the "checkpointed" function will be skipped by retrieving the cached value,
-and when will it re-execute.
-
-- [Cases when function is skipped](#cases-when-function-is-skipped)
-    - [Renaming function arguments](#renaming-function-arguments)
-    - [Renaming global/local variables](#renaming-globallocal-variables)
-    - [Renaming the function](#renaming-the-function)
-    - [Adding comments and type annotations](#adding-comments-and-type-annotations)
-    - [Changing argument default value](#changing-argument-default-value)
-- [Cases when function is re-executed](#cases-when-function-is-re-executed)
-    - [Changing code logic](#changing-code-logic)
+This page describes the cases where the checkpointed function could be correctly skipped by retrieving the cached value,
+and cases where it would be correctly re-executed.
 
 !!! attention
-    All cases mentioned in this page leads to the correct result.
+    All examples in this page leads to the correct result.
     However, there are some cases where the function will be incorrectly skipped,
     or not using the cache as expected.
     Please see [Known Caveats](caveats.md) page.
 
-## Cases when function is skipped
+## Skipped cases
 
 ### Renaming function arguments
 
@@ -204,9 +195,46 @@ In short - checkpoint does not care about the defaults,
 it only consider what values are actually plugged in.
 
 
-## Cases when function is re-executed
+## Re-executed cases
 
 ### Changing code logic
+
+After executing the following script,
+
+```python
+from checkpointing import checkpoint
+
+@checkpoint()
+def foo(a):
+    print("Running")
+    return a + 1
+
+if __name__ == "__main__":
+    print(foo(0))
+```
+
+Change the `+` to `-`,
+
+```python
+from checkpointing import checkpoint
+
+@checkpoint()
+def foo(a):
+    print("Running")
+    return a - 1
+
+if __name__ == "__main__":
+    print(foo(0))
+```
+
+When executing the modified script, `foo` will be re-executed and return the correct result, `-1`,
+because checkpoint finds that the actual code logic of `foo` has changed.
+
+### Passing different parameters
+
+
+
+
 
 
 

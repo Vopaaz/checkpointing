@@ -1,7 +1,7 @@
-site_name: Documentation - checkpointing
+site_name: checkpointing
 
 theme:
-  name: readthedocs
+  name: material
 
 nav:
   - "User Guide": index.md
@@ -12,3 +12,15 @@ nav:
 markdown_extensions:
   - footnotes
   - admonition
+  - pymdownx.highlight:
+      anchor_linenums: true
+      use_pygments: false
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+
+extra_javascript:
+  - https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.7.2/highlight.min.js
+  - javascripts/highlight.js
+extra_css:
+  - https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.7.2/styles/default.min.css
