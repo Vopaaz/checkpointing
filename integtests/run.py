@@ -107,6 +107,11 @@ def run_case(case_path: pathlib.Path):
         for f in wspath.iterdir():  # Script teardown
             remove_file_in_workplace(f)
 
+
+    if resource_path.exists():  # Resource teardown
+        for f in resource_path.iterdir():
+            remove_file_in_workplace(f)
+
     if i == 0:
         raise TestDefinitionError(f"No workspace exists for case {case_path}, at least 1 is expected.")
 

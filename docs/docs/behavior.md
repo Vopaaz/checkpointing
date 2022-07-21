@@ -3,12 +3,14 @@
 This page describes different cases when the "checkpointed" function will be skipped by retrieving the cached value,
 and when will it re-execute.
 
-- [Cases when the function is skipped](#cases-when-the-function-is-skipped)
+- [Cases when function is skipped](#cases-when-function-is-skipped)
     - [Renaming function arguments](#renaming-function-arguments)
     - [Renaming global/local variables](#renaming-globallocal-variables)
     - [Renaming the function](#renaming-the-function)
     - [Adding comments and type annotations](#adding-comments-and-type-annotations)
+    - [Changing argument default value](#changing-argument-default-value)
 - [Cases when function is re-executed](#cases-when-function-is-re-executed)
+    - [Changing code logic](#changing-code-logic)
 
 !!! attention
     All cases mentioned in this page leads to the correct result.
@@ -16,7 +18,7 @@ and when will it re-execute.
     or not using the cache as expected.
     Please see [Known Caveats](caveats.md) page.
 
-## Cases when the function is skipped
+## Cases when function is skipped
 
 ### Renaming function arguments
 
@@ -163,7 +165,48 @@ When executing the modified script,
 `foo` will be skipped as the checkpoint figured that it's only adding type annotations and comments.
 The result will be retrieved from the cache.
 
+### Changing argument default value
+
+After executing the following script,
+
+```python
+from checkpointing import checkpoint
+
+@checkpoint()
+def foo(a = 1):
+    print("Running")
+    return a
+
+if __name__ == "__main__":
+    print(foo())
+```
+
+Change the default value of argument `a`,
+but when calling `foo`, plug in the previously used value:
+
+```python
+from checkpointing import checkpoint
+
+@checkpoint()
+def foo(a = 2):
+    print("Running")
+    return a
+
+if __name__ == "__main__":
+    print(foo(1))
+```
+
+When executing the modified script, `foo` will be skipped as the checkpoint figured that the actual value of `a` is `1` in both executions. 
+The result will be retrieved from the cache.
+
+This also works if you remove or add default value to an argument.
+In short - checkpoint does not care about the defaults,
+it only consider what values are actually plugged in.
+
 
 ## Cases when function is re-executed
+
+### Changing code logic
+
 
 
