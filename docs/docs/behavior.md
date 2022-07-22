@@ -1,4 +1,3 @@
-# Behavior on Code Change
 
 This page describes the cases where the checkpointed function could be correctly skipped by retrieving the cached value,
 and cases where it would be correctly re-executed.
@@ -7,80 +6,138 @@ and cases where it would be correctly re-executed.
     All examples in this page leads to the correct result.
     However, there are some cases where the function will be incorrectly skipped,
     or not using the cache as expected.
-    Please see [Known Caveats](caveats.md) page.
+    Please see [Caveats](caveats.md).
+
+???+ info "How the cases are written"
+
+    The cases are generally written in the following format of two tabs.
+
+    === "1st run"
+
+        ```python title="script.py"
+        def foo():
+            print("Output before the code change")
+
+        if __name__ == "__main__":
+            foo()
+        ```
+
+        ```text title="Output"
+        Output before the code change
+        ```
+
+    === "2nd run"
+
+        ```python title="script.py"
+        def foo():
+            print("Output after the code change")
+
+        if __name__ == "__main__":
+            foo()
+        ```
+
+        ```text title="Output"
+        Output after the code change
+        ```
+
+    This denotes:
+
+    - At first, you have the script in the "1st run" tab.
+      Running it gives you the corresponding output.
+    - Next you modify the script and change it to what's shown in the "2nd run" tab.
+      Running it gives you another result,
+      and it shows how the function gets skipped or re-executed.
+
 
 ## Skipped cases
 
-### Renaming function arguments
+### Renaming arguments
 
-After executing the following script,
+=== "1st run"
 
-```python
-from checkpointing import checkpoint
+    ```python title="script.py"
+    from checkpointing import checkpoint
 
-@checkpoint()
-def foo(a):
-    print("Running")
-    return a
+    @checkpoint()
+    def foo(a):
+        print("Running")
+        return a
 
-if __name__ == "__main__":
-    foo(1)
-```
+    if __name__ == "__main__":
+        foo(1)
+    ```
 
-Rename the function argument:
+    ```text title="Output"
+    Running
+    1
+    ```
 
+=== "2nd run"
 
-```python
-from checkpointing import checkpoint
+    ```python title="script.py"
+    from checkpointing import checkpoint
 
-@checkpoint()
-def foo(x):
-    print("Running")
-    return x
+    @checkpoint()
+    def foo(x):
+        print("Running")
+        return x
 
-if __name__ == "__main__":
-    foo(1)
-```
+    if __name__ == "__main__":
+        foo(1)
+    ```
+
+    ```text title="Output"
+    1
+    ```
 
 When executing the modified script,
 `foo` will be skipped as the checkpoint figured that the code change is only about renaming function arguments.
 The result will be retrieved from the cache.
 
-### Renaming global/local variables
+### Renaming variables
 
-After executing the following script,
+=== "1st run"
 
-```python
-from checkpointing import checkpoint
+    ```python title="script.py"
+    from checkpointing import checkpoint
 
-N = 0
+    N = 0
 
-@checkpoint()
-def foo():
-    print("Running")
-    b = N + 1
-    return b
+    @checkpoint()
+    def foo():
+        print("Running")
+        b = N + 1
+        return b
 
-if __name__ == "__main__":
-    print(foo())
-```
+    if __name__ == "__main__":
+        print(foo())
+    ```
 
-Rename the reference global variable and the local variable:
+    ```text title="Output"
+    Running
+    1
+    ```
 
-```python
-from checkpointing import checkpoint
+=== "2nd run"
 
-X = 0
+    ```python title="script.py"
+    from checkpointing import checkpoint
 
-@checkpoint()
-def foo():
-    print("Running")
-    z = X + 1
-    return z
+    X = 0
 
-if __name__ == "__main__":
-    print(foo())
-```
+    @checkpoint()
+    def foo():
+        print("Running")
+        z = X + 1
+        return z
+
+    if __name__ == "__main__":
+        print(foo())
+    ```
+
+    ```text title="Output"
+    1
+    ```
 
 When executing the modified script,
 `foo` will be skipped as the checkpoint figured that the code change is only about renaming those variables.
@@ -89,34 +146,44 @@ The result will be retrieved from the cache.
 
 ### Renaming the function
 
+=== "1st run"
 
-After executing the following script,
 
-```python
-from checkpointing import checkpoint
+    ```python title="script.py"
+    from checkpointing import checkpoint
 
-@checkpoint()
-def foo(a):
-    print("Running")
-    return a
+    @checkpoint()
+    def foo(a):
+        print("Running")
+        return a
 
-if __name__ == "__main__":
-    print(foo(1))
-```
+    if __name__ == "__main__":
+        print(foo(1))
+    ```
 
-Rename the function to `bar`:
+    ```text title="Output"
+    Running
+    1
+    ```
 
-```python
-from checkpointing import checkpoint
+=== "2nd run"
 
-@checkpoint()
-def bar(a):
-    print("Running")
-    return a
+    ```python title="script.py"
+    from checkpointing import checkpoint
 
-if __name__ == "__main__":
-    print(bar(1))
-```
+    @checkpoint()
+    def bar(a):
+        print("Running")
+        return a
+
+    if __name__ == "__main__":
+        print(bar(1))
+    ```
+
+    ```text title="Output"
+    Running
+    1
+    ```
 
 When executing the modified script,
 `bar` will be skipped as the checkpoint figured that its logic is the same as the earlier `foo`.
@@ -124,113 +191,284 @@ The result will be retrieved from the cache.
 
 ### Adding comments and type annotations
 
-After executing the following script,
+=== "1st run"
 
-```python
-from checkpointing import checkpoint
+    ```python title="script.py"
+    from checkpointing import checkpoint
 
-@checkpoint()
-def foo(a):
-    print("Running")
-    return a
+    @checkpoint()
+    def foo(a):
+        print("Running")
+        return a
 
-if __name__ == "__main__":
-    print(foo(1))
-```
+    if __name__ == "__main__":
+        print(foo(1))
+    ```
 
-Add comments and annotations:
+    ```text title="Output"
+    Running
+    1
+    ```
 
-```python
-from checkpointing import checkpoint
+=== "2nd run"
 
-@checkpoint()
-def foo(a: int) -> int:
-    print("Running")
-    return a  # Add some comments
+    ```python title="script.py"
+    from checkpointing import checkpoint
 
-if __name__ == "__main__":
-    print(foo(1))
-```
+    @checkpoint()
+    def foo(a: int) -> int:
+        print("Running")
+        return a  # Add some comments
+
+    if __name__ == "__main__":
+        print(foo(1))
+    ```
+
+    ```text title="Output"
+    1
+    ```
 
 When executing the modified script,
 `foo` will be skipped as the checkpoint figured that it's only adding type annotations and comments.
 The result will be retrieved from the cache.
 
-### Changing argument default value
+### Changing default values
 
-After executing the following script,
 
-```python
-from checkpointing import checkpoint
+=== "1st run"
 
-@checkpoint()
-def foo(a = 1):
-    print("Running")
-    return a
+    ```python title="script.py"
+    from checkpointing import checkpoint
 
-if __name__ == "__main__":
-    print(foo())
-```
+    @checkpoint()
+    def foo(a = 1):
+        print("Running")
+        return a
 
-Change the default value of argument `a`,
-but when calling `foo`, plug in the previously used value:
+    if __name__ == "__main__":
+        print(foo())
+    ```
 
-```python
-from checkpointing import checkpoint
+    ```text title="Output"
+    Running 
+    1
+    ```
 
-@checkpoint()
-def foo(a = 2):
-    print("Running")
-    return a
+=== "2nd run"
 
-if __name__ == "__main__":
-    print(foo(1))
-```
+    ```python title="script.py"
+    from checkpointing import checkpoint
 
-When executing the modified script, `foo` will be skipped as the checkpoint figured that the actual value of `a` is `1` in both executions. 
+    @checkpoint()
+    def foo(a = 2):
+        print("Running")
+        return a
+
+    if __name__ == "__main__":
+        print(foo(1))
+    ```
+
+    ```text title="Output"
+    1
+    ```
+
+When executing the modified script, `foo` will be skipped as the checkpoint figured that the actual value of `a` is `1` in both executions.
 The result will be retrieved from the cache.
 
 This also works if you remove or add default value to an argument.
 In short - checkpoint does not care about the defaults,
 it only consider what values are actually plugged in.
 
+### Changing value of irrelevant global variables
+
+
+=== "1st run"
+
+    ```python title="script.py"
+    from checkpointing import checkpoint
+
+    X = 0
+
+    @checkpoint()
+    def foo():
+        print("Running")
+        return 0
+
+    if __name__ == "__main__":
+        print(foo())
+    ```
+
+    ```text title="Output"
+    Running
+    0
+    ```
+
+=== "2nd run"
+
+    ```python title="script.py"
+    from checkpointing import checkpoint
+
+    X = 1
+
+    @checkpoint()
+    def foo():
+        print("Running")
+        return 0
+
+    if __name__ == "__main__":
+        print(foo())
+    ```
+
+    ```text title="Output"
+    0
+    ```
+
+
+When executing the modified script, `foo` will be skipped as the checkpoint figured that `X` is not referenced in the function code,
+although its value has changed.
+
+
+
 
 ## Re-executed cases
 
+### Changing argument values
+
+=== "1st run"
+
+    ```python title="script.py"
+    from checkpointing import checkpoint
+
+    @checkpoint()
+    def foo(a):
+        print("Running")
+        return a
+
+    if __name__ == "__main__":
+        print(foo(0))
+    ```
+
+    ```text title="Output"
+    Running
+    0
+    ```
+
+=== "2nd run"
+
+    ```python title="script.py"
+    from checkpointing import checkpoint
+
+    @checkpoint()
+    def foo(a):
+        print("Running")
+        return a
+
+    if __name__ == "__main__":
+        print(foo(1))
+    ```
+
+    ```text title="Output"
+    Running
+    1
+    ```
+
+When executing the modified script, `foo` will be re-executed and return the correct result, `1`,
+because checkpoint finds that the passed arguments are different.
+
 ### Changing code logic
 
-After executing the following script,
+=== "1st run"
 
-```python
-from checkpointing import checkpoint
 
-@checkpoint()
-def foo(a):
-    print("Running")
-    return a + 1
+    ```python title="script.py"
+    from checkpointing import checkpoint
 
-if __name__ == "__main__":
-    print(foo(0))
-```
+    @checkpoint()
+    def foo(a):
+        print("Running")
+        return a
 
-Change the `+` to `-`,
+    if __name__ == "__main__":
+        print(foo(0))
+    ```
 
-```python
-from checkpointing import checkpoint
+    ```text title="Output"
+    Running
+    0
+    ```
 
-@checkpoint()
-def foo(a):
-    print("Running")
-    return a - 1
+=== "2nd run"
 
-if __name__ == "__main__":
-    print(foo(0))
-```
+    ```python title="script.py"
+    from checkpointing import checkpoint
+
+    @checkpoint()
+    def foo(a):
+        print("Running")
+        return a + 1
+
+    if __name__ == "__main__":
+        print(foo(0))
+    ```
+
+    ```text title="Output"
+    Running
+    1
+    ```
 
 When executing the modified script, `foo` will be re-executed and return the correct result, `-1`,
 because checkpoint finds that the actual code logic of `foo` has changed.
 
-### Passing different parameters
+
+### Changing value of referenced global variables
+
+=== "1st run"
+
+    ```python title="script.py"
+    from checkpointing import checkpoint
+
+    X = 0
+
+    @checkpoint()
+    def foo():
+        print("Running")
+        return X
+
+    if __name__ == "__main__":
+        print(foo())
+    ```
+
+    ```text title="Output"
+    Running
+    0
+    ```
+
+=== "2nd run"
+
+    ```python title="script.py"
+    from checkpointing import checkpoint
+
+    X = 1
+
+    @checkpoint()
+    def foo():
+        print("Running")
+        return X
+
+    if __name__ == "__main__":
+        print(foo())
+    ```
+
+    ```text title="Output"
+    Running
+    1
+    ```
+
+When executing the modified script, 
+foo will be re-executed and return the correct result, `1`, 
+because checkpoint finds that the value of a reference global variable has been modified.
+
+
 
 
 

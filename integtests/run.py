@@ -80,6 +80,8 @@ def run_case(case_path: pathlib.Path):
         for f in wspath.iterdir():  # Script setup
             copy_file_to_workplace(f)
 
+        time.sleep(0.5) # Sometimes copy doesn't finish and it causes tests to fail randomly
+
         if not outputpath.exists():
             raise TestDefinitionError(f"Case {i} for {case_path} has script definition, but no expected output")
 

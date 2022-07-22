@@ -6,4 +6,4 @@ def foo(a):
     return a
 
 if __name__ == "__main__":
-    print(foo(0))
+    print(foo(1))

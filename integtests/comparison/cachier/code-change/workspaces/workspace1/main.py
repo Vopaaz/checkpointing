@@ -2,7 +2,7 @@ from cachier import cachier
 
 @cachier()
 def foo(x):
-    return x - 1 # Code logic is changed, but still using the cached result
+    return x + 1
 
 
 if __name__ == "__main__":

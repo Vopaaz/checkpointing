@@ -6,21 +6,21 @@ theme:
 nav:
   - "User Guide": index.md
   - "Behavior on Code Change": behavior.md
-  - "Known Caveats": caveats.md
+  - "Caveats": caveats.md
   - "Comparison with Similar Packages": comparison.md
 
 markdown_extensions:
   - footnotes
   - admonition
+  - pymdownx.tabbed:
+      alternate_style: true 
   - pymdownx.highlight:
       anchor_linenums: true
-      use_pygments: false
+      use_pygments: true
   - pymdownx.inlinehilite
   - pymdownx.snippets
   - pymdownx.superfences
+  - pymdownx.details
 
-extra_javascript:
-  - https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.7.2/highlight.min.js
-  - javascripts/highlight.js
-extra_css:
-  - https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.7.2/styles/default.min.css
+repo_url: https://github.com/Vopaaz/checkpointing
+repo_name: Vopaaz/checkpointing

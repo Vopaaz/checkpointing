@@ -6,7 +6,7 @@ unit:
 integ:
 	python -m integtests.run $(kw)
 
-doc: mandoc apidoc
+doc: mandoc apidoc readme
 
 mandoc-serve:
 	cd docs && mkdocs serve

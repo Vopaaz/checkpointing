@@ -51,7 +51,7 @@ see [Comparing with similar packages](comparison.md).
 
 !!! attention
     However, there are some cases where the rerun decision cannot be correctly made.
-    Please read through the [Known Caveats](caveats.md) page and avoid those patterns.
+    Please read through the [Caveats](caveats.md) page and avoid those patterns.
 
 Although the package focuses on persisting the cache across different executions,
 it also works if you call the same function multiple times within one execution.
@@ -72,7 +72,7 @@ Such use cases are very common in the preliminary stage of machine learning proj
 
 ## Installation
 
-This package is available on PyPI, so you can easily install it with `pip`
+This package is available on [PyPI](https://pypi.org/project/checkpointing/), and can be installed with `pip`.
 
 ```shell
 $ pip install checkpointing
@@ -171,7 +171,7 @@ This would be equivalent to force invoking `foo(args)`.
 Note that the return value of this rerun will be cached to the disk and overwrite the previous value.
 
 This is useful if some factors that would affect the function return value has changed,
-but `checkpoint` failed to capture this difference, as described in the [Known Caveats](caveats.md).
+but `checkpoint` failed to capture this difference, as described in the [Caveats](caveats.md).
 
 ## Usage notes
 
@@ -182,7 +182,7 @@ Please be aware that
 - If the project involves randomness, it's the user's responsibility to set the random seed or random state,
   such that the arguments and reference global variables of the cached function are exactly identical
 - The built-in strategy to determine if a function needs to be re-executed is imperfect.
-  Please see the [Known Caveats](caveats.md),
+  Please see [Caveats](caveats.md),
   and avoid those cases when the rerun condition cannot be correctly determined.
 
 

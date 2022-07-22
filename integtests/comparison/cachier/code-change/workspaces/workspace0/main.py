@@ -2,7 +2,7 @@ from cachier import cachier
 
 @cachier()
 def foo(x):
-    return x + 1
+    return x
 
 
 if __name__ == "__main__":

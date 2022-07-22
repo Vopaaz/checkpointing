@@ -3,6 +3,48 @@
 Some other packages have similar functionality as `checkpointing`.
 However we handle some cases better than them, as explained below.
 
+
+??? info "How the cases are written"
+
+    The cases are generally written in the following format of two tabs.
+
+    === "1st run"
+
+        ```python title="script.py"
+        def foo():
+            print("Output before the code change")
+
+        if __name__ == "__main__":
+            foo()
+        ```
+
+        ```text title="Output"
+        Output before the code change
+        ```
+
+    === "2nd run"
+
+        ```python title="script.py"
+        def foo():
+            print("Output after the code change")
+
+        if __name__ == "__main__":
+            foo()
+        ```
+
+        ```text title="Output"
+        Output after the code change
+        ```
+
+    This denotes:
+
+    - At first, you have the script in the "1st run" tab.
+      Running it gives you the corresponding output.
+    - Next you modify the script and change it to what's shown in the "2nd run" tab.
+      Running it gives you another result,
+      and it shows how the function gets skipped or re-executed.
+
+
 ## cachier
 
 The following cases are tested with
@@ -13,32 +55,43 @@ The following cases are tested with
 cachier does not watch the function code at all,
 therefore, if the code logic has changed, it will not rerun which leads to wrong result.
 
-```python
-from cachier import cachier
 
-@cachier()
-def foo(x):
-    return x + 1
+=== "1st run"
 
-if __name__ == "__main__":
-    print(foo(0))
-```
+    ```python title="script.py"
+    from cachier import cachier
 
-Run the above script, the result is `1`.
-Then change the code to:
+    @cachier()
+    def foo(x):
+        return x
 
-```python
-from cachier import cachier
+    if __name__ == "__main__":
+        print(foo(0))
+    ```
 
-@cachier()
-def foo(x):
-    return x - 1 # Plus becomes minus
+    ```text title="Output"
+    0
+    ```
 
-if __name__ == "__main__":
-    print(foo(0))
-```
+=== "2nd run"
 
-Rerun the script again and the output is still `1`, which is incorrect.
+    ```python title="script.py"
+    from cachier import cachier
+
+    @cachier()
+    def foo(x):
+        return x + 1
+
+    if __name__ == "__main__":
+        print(foo(0))
+    ```
+
+    ```text title="Output"
+    0
+    ```
+
+Even though the code is changed to `x + 1`, 
+cachier is using the previously cached value, which is wrong.
 
 Replace cachier with checkpointing, the second execution of the script will rerun `foo`,
 and gives the correct result, `-1`.
@@ -70,85 +123,107 @@ such as numpy and pandas.
 
 The following cases are tested with [joblib](https://joblib.readthedocs.io/en/latest/memory.html#memory) version 1.1.0[^1].
 
-### Code change
+### Irrelevant Code change
 
 joblib watches the function code source directly,
 which means that even adding comments to the code will cause a function to rerun.
 
-```python
-from joblib import Memory
+=== "1st run"
 
-memory = Memory(".joblib", verbose=0)
+    ```python title="script.py"
+    from joblib import Memory
 
-@memory.cache
-def foo():
-    print(f"Running")
+    memory = Memory(".joblib", verbose=0)
 
-if __name__ == "__main__":
-    foo()
-```
+    @memory.cache
+    def foo():
+        print(f"Running")
 
-Run this script and `foo` will be executed as expected.
-However, after you add some comments to the function definition:
+    if __name__ == "__main__":
+        foo()
+    ```
 
-```python
-from joblib import Memory
+    ```text title="Output"
+    Running
+    ```
 
-memory = Memory(".joblib", verbose=0)
+=== "2nd run"
 
-@memory.cache
-def foo():
-    # Add some comments
-    print(f"Running") 
+    ```python title="script.py"
+    from joblib import Memory
 
-if __name__ == "__main__":
-    foo()
-```
+    memory = Memory(".joblib", verbose=0)
 
-Run this script again and you will still see `Running` in the output,
-which means that the function is re-executed.
+    @memory.cache
+    def foo():
+        # Add some comments
+        print(f"Running") 
 
-Replace joblib with checkpointing, in the second execution of the script, `foo` won't be executed.
-This package watches the function code with an [AST](https://docs.python.org/3/library/ast.html)
-based approach, which can automatically determine that "there is no need to rerun" for some code change cases.
+    if __name__ == "__main__":
+        foo()
+    ```
+
+    ```text title="Output"
+    Running
+    ```
+
+The only difference in the code is a line of comment,
+which shouldn't affect the return value of the function.
+However, joblib failed to use the cache, causing redundant re-compute.
+
+Replace joblib with checkpointing, in the 2nd run, `foo` won't be executed.
+We watch the function code with an [AST](https://docs.python.org/3/library/ast.html)
+based approach, which eliminates the effect of type annotations, comments, and formatting.
 
 ### Global variable
 
-joblib does not take the referenced global variable into account.
+joblib does not consider the referenced global variable.
 
-```python
-from joblib import Memory
+=== "1st run"
 
-memory = Memory(".joblib", verbose=0)
+    ```python title="script.py"
+    from joblib import Memory
 
-a = 1
+    memory = Memory(".joblib", verbose=0)
 
-@memory.cache
-def foo():
-    return a
+    a = 1
 
-if __name__ == "__main__":
-    print(foo())
-```
+    @memory.cache
+    def foo():
+        return a
 
-This gives `1` as expected. However, change the global `a` and rerun the script again:
+    if __name__ == "__main__":
+        print(foo())
+    ```
 
-```python
-from joblib import Memory
+    ```text title="Output"
+    1
+    ```
 
-memory = Memory(".joblib", verbose=0)
 
-a = 2
+=== "2nd run"
 
-@memory.cache
-def foo():
-    return a
+    ```python title="script.py"
+    from joblib import Memory
 
-if __name__ == "__main__":
-    print(foo())
-```
+    memory = Memory(".joblib", verbose=0)
 
-The execution of `foo` is skipped and the returned result is still `1`, which is wrong.
+    a = 2
+
+    @memory.cache
+    def foo():
+        return a
+
+    if __name__ == "__main__":
+        print(foo())
+    ```
+
+    ```text title="Output"
+    1
+    ```
+
+Even though the value of the referenced global variable is changed to `2`,
+the execution of `foo` is skipped and the previous cache is returned, which is wrong.
 
 Replace joblib with checkpointing, in the second execution of the script, 
 `foo` will be invoked and the correct result `2` will be returned.

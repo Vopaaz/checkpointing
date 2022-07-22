@@ -1,9 +1,11 @@
 from checkpointing import checkpoint
 
+X = 1
+
 @checkpoint()
-def foo(a):
+def foo():
     print("Running")
-    return a
+    return X
 
 if __name__ == "__main__":
-    print(foo(0))
+    print(foo())
