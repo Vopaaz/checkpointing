@@ -1,5 +1,5 @@
 This page introduces the cases where you would expect the function to be re-executed,
-but it's actually skipped by checkpointing, or the vice versa.
+but it's actually skipped by checkpointing and the vice versa.
 We would also give suggestions on how to avoid those cases.
 
 
@@ -43,13 +43,12 @@ We would also give suggestions on how to avoid those cases.
       Running it gives you another result,
       and it shows how the function gets skipped or re-executed.
 
-## Falsely skipped cases
 
-### Changing reference function logic
+## Changing reference function
 
 checkpointing only watches the code change of the decorated function itself.
 Any reference function are only identified by their reference,
-while the change of code logic cannot be captured.
+meaning that the change of code logic cannot be captured.
 
 === "1st run"
 
@@ -93,10 +92,58 @@ while the change of code logic cannot be captured.
 
 Unfortunately the change in `bar` is not captured, resulting in a wrong return value.
 
+The other side of this same problem is that, 
+renaming a reference function will the cause the decorated function to re-execute.
+
+=== "1st run"
+
+    ```python title="script.py"
+    from checkpointing import checkpoint
+
+    def bar(x):
+        return x
+
+    @checkpoint()
+    def foo(x):
+        return bar(x)
+
+    if __name__ == "__main__":
+        print(foo(0))
+    ```
+
+    ```text title="Output"
+    Running
+    0
+    ```
+
+=== "2nd run"
+
+    ```python title="script.py"
+    from checkpointing import checkpoint
+
+    def qux(x):
+        return x
+
+    @checkpoint()
+    def foo(x):
+        return qux(x)
+
+    if __name__ == "__main__":
+        print(foo(0))
+    ```
+
+    ```text title="Output"
+    Running
+    0
+    ```
+
+Although `qux` and `bar` are doing the same thing, `foo` is re-executed.
+
+
 We suggest to decouple your code logic,
 such that the checkpointed function only invoke other functions that are known to be "static",
 e.g. those from an external library.
-Instead of invoking another custom function whose logic is likely to change in the future,
+Instead of invoking another custom function whose logic or name is likely to change in the future,
 pass its result as an argument.
 
 ```python title="script.py"
@@ -116,7 +163,7 @@ if __name__ == "__main__":
 ```
 
 
-### Changing object method logic
+## Changing object method
 
 The object method is identified by its name only.
 Change in the object method code cannot be captured by the checkpoint.
@@ -178,8 +225,67 @@ Change in the object method code cannot be captured by the checkpoint.
 
 Unfortunately the change in `Bar.baz` is not captured, resulting in a wrong return value.
 
-We suggest to only use objects whose methods logic are known to be "static",
-e.g. those from an external library, or a custom data class.
+
+=== "1st run"
+
+    ```python title="script.py"
+    from checkpointing import checkpoint
+
+    class Bar:
+        def __init__(self) -> None:
+            self.x = 0
+
+        def baz(self):
+            self.x += 1
+
+    @checkpoint()
+    def foo(bar):
+        print("Running")
+        bar.baz()
+        return bar
+
+    if __name__ == "__main__":
+        bar = Bar()
+        result = foo(bar)
+        print(result.x)
+    ```
+
+    ```text title="Output"
+    1
+    ```
+
+=== "2nd run"
+
+    ```python title="script.py"
+    from checkpointing import checkpoint
+
+    class Bar:
+        def __init__(self) -> None:
+            self.x = 0
+
+        def baz(self):
+            pass
+
+    @checkpoint()
+    def foo(bar):
+        bar.baz()
+        return bar
+
+    if __name__ == "__main__":
+        bar = Bar()
+        result = foo(bar)
+        print(result.x)
+    ```
+
+    ```text title="Output"
+    1
+    ```
+
+
+
+We suggest to only use objects whose methods are known to be "static",
+e.g. those from an external library.
+
 
 
 ## Falsely re-executed cases
@@ -263,7 +369,7 @@ Therefore, in the 2nd run, the checkpoint cannot tell that this `model` is the s
 The solution is to add a `random_state` parameter to the estimator,
 so that its internal state will be reproducible as long as the training data is the same.
 
-??? example "Full code and output for adding `random_state`"
+??? example "Full code and output after adding `random_state`"
 
     === "1st run"
 
@@ -330,3 +436,54 @@ so that its internal state will be reproducible as long as the training data is 
 
 Alternatively, you can also checkpoint the function that builds the model.
 The return values in the subsequent runs are guaranteed to be the same as the 1st run.
+
+
+### Irrelevant code changes
+
+Although checkpointing is able to ignore many irrelevant modifications, such as renaming local variables,
+in many cases it would still think some code change is significant enough such that the return value would change.
+
+
+
+=== "1st run"
+
+    ```python title="script.py"
+    from checkpointing import checkpoint
+
+    @checkpoint()
+    def foo(x):
+        print("Running")
+        y = x + 1
+        return y
+
+    if __name__ == "__main__":
+        print(foo(0))
+    ```
+
+    ```text title="Output"
+    Running
+    1
+    ```
+
+=== "2nd run"
+
+    ```python title="script.py"
+    from checkpointing import checkpoint
+
+    @checkpoint()
+    def foo(x):
+        print("Running")
+        return x + 1
+
+    if __name__ == "__main__":
+        print(foo(0))
+    ```
+
+    ```text title="Output"
+    Running
+    1
+    ```
+
+Even though it's easy for a human to tell that the two executions of `foo` should give the same result,
+checkpointing hasn't been able to do so yet.
+

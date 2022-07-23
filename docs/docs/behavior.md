@@ -327,6 +327,51 @@ it only consider what arguments are actually plugged in.
 When executing the modified script, `foo` will be skipped as the checkpoint figured that `X` is not referenced in the function code,
 although its value has changed.
 
+### Formatting the code
+
+=== "1st run"
+
+    ```python title="script.py"
+    from checkpointing import checkpoint
+
+    @checkpoint()
+    def foo(a):
+        print("Running")
+        return [a]
+
+
+    if __name__ == "__main__":
+        print(foo(1))
+    ```
+
+    ```text title="Output"
+    Running
+    [1]
+    ```
+
+=== "2nd run"
+
+    ```python title="script.py"
+    from checkpointing import checkpoint
+
+    @checkpoint()
+    def foo(a):
+        print("Running")
+        return [
+            a,
+        ]
+
+    if __name__ == "__main__":
+        print(foo(1))
+    ```
+
+    ```text title="Output"
+    [1]
+    ```
+
+When executing the modified script, 
+`foo` will be skipped as the checkpoint figured that the code change is only about formatting.
+
 
 
 ## Re-executed cases

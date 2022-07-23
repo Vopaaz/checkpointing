@@ -25,11 +25,9 @@ class FuncCallContext:
         self.__signature = inspect.signature(self.__func)
 
         if def_frame is not None:
-            self.__globals = copy.copy(def_frame.f_globals)
             self.__locals = copy.copy(def_frame.f_locals)
 
         else:
-            self.__globals = None
             self.__locals = None
 
     @property
@@ -172,7 +170,7 @@ class FuncCallContext:
         if self.__locals is not None and varname in self.__locals:
             return self.__locals[varname]
 
-        if self.__globals is not None and varname in self.__globals:
-            return self.__globals[varname]
+        if self.__func.__globals__ is not None and varname in self.__func.__globals__:
+            return self.__func.__globals__[varname]
 
         return None

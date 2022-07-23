@@ -126,7 +126,7 @@ The following cases are tested with [joblib](https://joblib.readthedocs.io/en/la
 ### Irrelevant code change
 
 joblib watches the function code source directly,
-which means that even adding comments to the code will cause a function to rerun.
+which means that even adding comments or reformatting the code will cause a function to rerun.
 
 === "1st run"
 
