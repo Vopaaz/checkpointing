@@ -32,7 +32,7 @@ jobs:
         run: pytest tests/ checkpointing/
 
       - name: Run integration tests
-        run: python -m integtests.run --wait-sec 0.5
+        run: python -m integtests.run --wait-sec 1
 
       - name: "Upload coverage to Codecov"
         uses: codecov/codecov-action@v3
