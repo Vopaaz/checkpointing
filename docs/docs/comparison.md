@@ -177,7 +177,7 @@ based approach, which eliminates the effect of type annotations, comments, and f
 
 ### Global variable
 
-joblib does not consider the referenced global variable.
+joblib does not consider the reference global variable.
 
 === "1st run"
 
@@ -222,7 +222,7 @@ joblib does not consider the referenced global variable.
     1
     ```
 
-Even though the value of the referenced global variable is changed to `2`,
+Even though the value of the reference global variable is changed to `2`,
 the execution of `foo` is skipped and the previous cache is returned, which is wrong.
 
 Replace joblib with checkpointing, in the second execution of the script, 

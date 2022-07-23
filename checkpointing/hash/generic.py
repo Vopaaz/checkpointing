@@ -7,6 +7,7 @@ from checkpointing.refactor.funcdef import FunctionDefinitionUnifier
 from checkpointing.exceptions import HashFailedWarning
 from types import GeneratorType
 from warnings import warn
+import pickle
 
 
 def hash_string(s: str) -> bytes:
@@ -18,15 +19,21 @@ def hash_with_dill(obj: Any, pickle_protocol: int) -> bytes:
     return dill.dumps(obj, protocol=pickle_protocol, byref=True, recurse=False)
 
 
+def hash_with_pickle(obj: Any, pickle_protocol: int) -> bytes:
+    return pickle.dumps(obj, protocol=pickle_protocol)
+
+
 def hash_generator(generator: GeneratorType) -> bytes:
     return hash_string(generator.__qualname__)
 
 
 def hash_generic(obj: Any, pickle_protocol: int):
-    try:
-        return hash_with_dill(obj, pickle_protocol)
-    except:
-        pass
+
+    for hasher in [hash_with_pickle, hash_with_dill]:
+        try:
+            return hasher(obj, pickle_protocol)
+        except:
+            pass
 
     if inspect.isgenerator(obj):
         return hash_generator(obj)

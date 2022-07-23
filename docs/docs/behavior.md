@@ -420,7 +420,7 @@ When executing the modified script, `foo` will be re-executed and return the cor
 because checkpoint finds that the actual code logic of `foo` has changed.
 
 
-### Changing value of referenced global variables
+### Changing value of reference global variables
 
 === "1st run"
 

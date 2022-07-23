@@ -162,11 +162,11 @@ Please set this at the top-level of your module/script, before you create any `c
 You can force rerun a checkpointed function with
 
 ```python
-foo.rerun(args)
+foo.rerun(arg)
 ```
 
 where `foo` is the decorated function.
-This would be equivalent to force invoking `foo(args)`.
+This would be equivalent to directly invoking `foo(arg)`.
 
 Note that the return value of this rerun will be cached to the disk and overwrite the previous value.
 
