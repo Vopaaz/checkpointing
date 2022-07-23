@@ -3,8 +3,10 @@ test: unit integ
 unit:
 	pytest tests/ checkpointing/
 
+ws = 0.1
+
 integ:
-	python -m integtests.run $(kw)
+	python -m integtests.run $(kw) --wait-sec $(ws)
 
 doc: mandoc apidoc readme
 

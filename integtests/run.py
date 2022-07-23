@@ -7,6 +7,7 @@ from checkpointing import defaults
 from termcolor import cprint
 import os
 from atomicwrites import atomic_write
+import time
 
 cwd = pathlib.Path().cwd()
 workspace = pathlib.Path("testworkspace")
@@ -61,7 +62,7 @@ def clear_cache():
             shutil.rmtree(cache_dir)
 
 
-def run_case(case_path: pathlib.Path):
+def run_case(case_path: pathlib.Path, wait_sec:float):
 
     refresh_workspace()
     clear_cache()
@@ -81,6 +82,8 @@ def run_case(case_path: pathlib.Path):
 
         for f in wspath.iterdir():  # Script setup
             copy_file_to_workplace(f)
+
+        time.sleep(wait_sec) # Sometimes the copy still can't be atomic
 
         if not outputpath.exists():
             raise TestDefinitionError(f"Case {i} for {case_path} has script definition, but no expected output")
@@ -150,9 +153,11 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument("keyword", nargs="?", type=str, help="Only run tests including this keyword", default=None)
+    parser.add_argument("--wait-sec", nargs="?", type=float, help="How long to wait after file copy", default=0.1)
 
     args = parser.parse_args()
     keyword = args.keyword
+    wait_sec = args.wait_sec
 
     cprint("Integration tests:")
 
@@ -168,7 +173,7 @@ if __name__ == "__main__":
             continue
 
         try:
-            run_case(case)
+            run_case(case, wait_sec)
 
         except TestDefinitionError as e:
             cprint(f"Definition Error: {e}", "red")
@@ -183,6 +188,7 @@ if __name__ == "__main__":
             passed += 1
 
     cprint(f"Total passed: {passed}", "green")
+
     if failed:
         cprint(f"Total failed: {len(failed)}", "red")
         cprint("Failed tests:", "red")
