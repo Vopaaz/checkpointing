@@ -80,7 +80,7 @@ def run_case(case_path: pathlib.Path):
         for f in wspath.iterdir():  # Script setup
             copy_file_to_workplace(f)
 
-        time.sleep(0.5) # Sometimes copy doesn't finish and it causes tests to fail randomly
+        time.sleep(0.5)  # Sometimes copy doesn't finish and it causes tests to fail randomly
 
         if not outputpath.exists():
             raise TestDefinitionError(f"Case {i} for {case_path} has script definition, but no expected output")
@@ -96,7 +96,9 @@ def run_case(case_path: pathlib.Path):
                 cwd=cwd,
             )
         except subprocess.CalledProcessError as e:
-            raise TestFailedError(f"Test failed in {case_path}, workspace{i} because an exception is raised.\n" + e.stdout + "\n" + e.stderr)
+            raise TestFailedError(
+                f"Test failed in {case_path}, workspace{i} because an exception is raised.\n" + e.stdout.decode() + "\n" + e.stderr.decode()
+            )
 
         actual = sanitize(p.stdout.decode("utf-8"))
 
