@@ -51,7 +51,7 @@ and cases where it would be correctly re-executed.
 
 ## Skipped cases
 
-### Renaming arguments
+### Renaming parameters
 
 === "1st run"
 
@@ -91,7 +91,7 @@ and cases where it would be correctly re-executed.
     ```
 
 When executing the modified script,
-`foo` will be skipped as the checkpoint figured that the code change is only about renaming function arguments.
+`foo` will be skipped as the checkpoint figured that the code change is only about renaming function parameters.
 The result will be retrieved from the cache.
 
 ### Renaming variables
@@ -275,9 +275,9 @@ The result will be retrieved from the cache.
 When executing the modified script, `foo` will be skipped as the checkpoint figured that the actual value of `a` is `1` in both executions.
 The result will be retrieved from the cache.
 
-This also works if you remove or add default value to an argument.
+This also works if you remove or add default value to a parameter.
 In short - checkpoint does not care about the defaults,
-it only consider what values are actually plugged in.
+it only consider what arguments are actually plugged in.
 
 ### Changing value of irrelevant global variables
 
@@ -329,10 +329,9 @@ although its value has changed.
 
 
 
-
 ## Re-executed cases
 
-### Changing argument values
+### Changing arguments
 
 === "1st run"
 

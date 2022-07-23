@@ -123,7 +123,7 @@ such as numpy and pandas.
 
 The following cases are tested with [joblib](https://joblib.readthedocs.io/en/latest/memory.html#memory) version 1.1.0[^1].
 
-### Irrelevant Code change
+### Irrelevant code change
 
 joblib watches the function code source directly,
 which means that even adding comments to the code will cause a function to rerun.

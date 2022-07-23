@@ -1,11 +1,11 @@
 # Welcome to checkpointing
 
-Persistent cache for long-running Python functions.
+Persistent cache for Python functions.
 
 ## Introduction
 
 `checkpointing` provides a decorator which allows you to cache the return value of a [pure function](https://en.wikipedia.org/wiki/Pure_function#Compiler_optimizations)[^1] on the disk.
-When the function is called later with the same parameters, it automatically skips the function execution,
+When the function is called later with the same arguments, it automatically skips the function execution,
 retrieves the cached value and return.
 
 For example,
@@ -93,8 +93,8 @@ def foo():
     return 0
 ```
 
-After that, `foo` will be able to automatically handle the caching, skipping,
-and re-executing as described previously.
+After that, `foo` will be automatically cached, skipped,
+or re-executed as described previously.
 You can call `foo` in the same way as you normally would.
 
 ### Configure the checkpoint

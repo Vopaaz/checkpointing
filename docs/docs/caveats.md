@@ -45,7 +45,7 @@ We would also give suggestions on how to avoid those cases.
 
 ## Falsely skipped cases
 
-### Reference function logic change
+### Changing reference function logic
 
 checkpointing only watches the code change of the decorated function itself.
 Any reference function are only identified by their reference,
@@ -93,7 +93,7 @@ while the change of code logic cannot be captured.
 
 Unfortunately the change in `bar` is not captured, resulting in a wrong return value.
 
-We suggest to decouple your code logic, 
+We suggest to decouple your code logic,
 such that the checkpointed function only invoke other functions that are known to be "static",
 e.g. those from an external library.
 Instead of invoking another custom function whose logic is likely to change in the future,
@@ -111,12 +111,12 @@ def foo(x):
 
 if __name__ == "__main__":
     x = 0
-    y = bar(x) # The change in `bar` can be reflected by y, 
+    y = bar(x) # The change in `bar` can be reflected by y,
     z = foo(y) # and thus can be correctly captured by `foo`
 ```
 
 
-### Object method logic change
+### Changing object method logic
 
 The object method is identified by its name only.
 Change in the object method code cannot be captured by the checkpoint.
@@ -178,4 +178,155 @@ Change in the object method code cannot be captured by the checkpoint.
 
 Unfortunately the change in `Bar.baz` is not captured, resulting in a wrong return value.
 
-We suggest to only use objects, such that the checkpointed function only invoke other functions that are known to be "static", e.g. those from an external library.
+We suggest to only use objects whose methods logic are known to be "static",
+e.g. those from an external library, or a custom data class.
+
+
+## Falsely re-executed cases
+
+### Randomness
+
+If the input parameter of a function is the result of a non-deterministic procedure,
+user should properly set the random seed or equivalent fields to make sure that the parameters passed to the checkpointed function are exactly the same.
+
+Although this is not a deflect of this package, it might cause problems in many common use cases in data science field if not paying attention.
+
+
+=== "1st run"
+
+    ```python title="script.py"
+    from sklearn.linear_model import LogisticRegression
+    from checkpointing import checkpoint
+
+
+    def build_model():
+        X = [[0], [1], [2], [3]]
+        y = [0, 0, 1, 1]
+        model = LogisticRegression(solver="saga") # saga makes the model random
+        return model.fit(X, y) 
+
+
+    @checkpoint()
+    def predict(model):
+        print("Running")
+        X = [[0], [1], [2], [3]]
+        return model.predict(X).tolist()
+
+
+    if __name__ == "__main__":
+        model = build_model()
+        prediction = predict(model)
+        print(prediction)
+    ```
+
+    ```text title="Output"
+    Running
+    [0, 0, 1, 1]
+    ```
+
+=== "2nd run"
+
+    ```python title="script.py"
+    from sklearn.linear_model import LogisticRegression
+    from checkpointing import checkpoint
+
+
+    def build_model():
+        X = [[0], [1], [2], [3]]
+        y = [0, 0, 1, 1]
+        model = LogisticRegression(solver="saga") # saga makes the model random
+        return model.fit(X, y) 
+
+
+    @checkpoint()
+    def predict(model):
+        print("Running")
+        X = [[0], [1], [2], [3]]
+        return model.predict(X).tolist()
+
+
+    if __name__ == "__main__":
+        model = build_model()
+        prediction = predict(model)
+        print(prediction)
+    ```
+
+    ```text title="Output"
+    Running
+    [0, 0, 1, 1]
+    ```
+
+There is no difference between the two executed scripts,
+however, the randomness in the `LogisticRegression` model causes its internal state to be different after the two estimations.
+Therefore, in the 2nd run, the checkpoint cannot tell that this `model` is the same one as last time, so `predict` is re-executed.
+
+The solution is to add a `random_state` parameter to the estimator,
+so that its internal state will be reproducible as long as the training data is the same.
+
+??? example "Full code and output for adding `random_state`"
+
+    === "1st run"
+
+        ```python title="script.py"
+        from sklearn.linear_model import LogisticRegression
+        from checkpointing import checkpoint
+
+
+        def build_model():
+            X = [[0], [1], [2], [3]]
+            y = [0, 0, 1, 1]
+            model = LogisticRegression(solver="saga", random_state=42)
+            return model.fit(X, y) 
+
+
+        @checkpoint()
+        def predict(model):
+            print("Running")
+            X = [[0], [1], [2], [3]]
+            return model.predict(X).tolist()
+
+
+        if __name__ == "__main__":
+            model = build_model()
+            prediction = predict(model)
+            print(prediction)
+        ```
+
+        ```text title="Output"
+        Running
+        [0, 0, 1, 1]
+        ```
+
+    === "2nd run"
+
+        ```python title="script.py"
+        from sklearn.linear_model import LogisticRegression
+        from checkpointing import checkpoint
+
+
+        def build_model():
+            X = [[0], [1], [2], [3]]
+            y = [0, 0, 1, 1]
+            model = LogisticRegression(solver="saga", random_state=42)
+            return model.fit(X, y) 
+
+
+        @checkpoint()
+        def predict(model):
+            print("Running")
+            X = [[0], [1], [2], [3]]
+            return model.predict(X).tolist()
+
+
+        if __name__ == "__main__":
+            model = build_model()
+            prediction = predict(model)
+            print(prediction)
+        ```
+
+        ```text title="Output"
+        [0, 0, 1, 1]
+        ```
+
+Alternatively, you can also checkpoint the function that builds the model.
+The return values in the subsequent runs are guaranteed to be the same as the 1st run.
