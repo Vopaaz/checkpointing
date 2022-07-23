@@ -5,7 +5,8 @@ import shutil
 import argparse
 from checkpointing import defaults
 from termcolor import cprint
-import time
+import os
+from atomicwrites import atomic_write
 
 cwd = pathlib.Path().cwd()
 workspace = pathlib.Path("testworkspace")
@@ -24,7 +25,8 @@ class TestFailedError(RuntimeError):
 
 def copy_file_to_workplace(f: pathlib.Path):
     if f.is_file():
-        shutil.copyfile(f, workspace.joinpath(f.name))
+        with open(f, "r", encoding="utf-8") as fsrc, atomic_write(workspace.joinpath(f.name)) as fdst:
+            fdst.write(fsrc.read())
     else:
         raise TestDefinitionError(f"{f} should be a file.")
 
@@ -79,8 +81,6 @@ def run_case(case_path: pathlib.Path):
 
         for f in wspath.iterdir():  # Script setup
             copy_file_to_workplace(f)
-
-        time.sleep(0.5)  # Sometimes copy doesn't finish and it causes tests to fail randomly
 
         if not outputpath.exists():
             raise TestDefinitionError(f"Case {i} for {case_path} has script definition, but no expected output")
