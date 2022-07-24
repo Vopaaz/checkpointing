@@ -6,9 +6,7 @@ from checkpointing.cache import PickleFileCache
 def checkpoint(
     directory: str = None,
     on_error: str = "warn",
-    algorithm: str = None,
-    hash_pickle_protocol: int = None,
-    save_pickle_protocol: int = None,
+    cache_pickle_protocol: int = None,
 ) -> DecoratorCheckpoint:
     """
     Alias for a default decorator checkpoint, which hashes the function code and parameter values,
@@ -25,17 +23,12 @@ def checkpoint(
                 - `"ignore"`, the exception will be ignored and the user function will be invoked and executed normally.
                 If None, use the global default `checkpoint.on_error`
 
-        algorithm: the hash algorithm used, if None, use the global default `hash.algorithm`
-
-        hash_pickle_protocol: the pickle protocol used by the hasher. If None, use the global default
-                              `hash.pickle_protocol`
-
-        save_pickle_protocol: the pickle protocol used by the cache to save results to the disk.
+        cache_pickle_protocol: the pickle protocol used by the cache to save results to the disk.
                               If None, use the global default `cache.pickle_protocol`
     """
 
-    identifier = AutoHashIdentifier(algorithm, hash_pickle_protocol)
-    cache = PickleFileCache(directory, save_pickle_protocol)
+    identifier = AutoHashIdentifier()
+    cache = PickleFileCache(directory, cache_pickle_protocol)
     decorator = DecoratorCheckpoint(identifier, cache, on_error)
 
     return decorator

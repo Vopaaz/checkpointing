@@ -1,0 +1,26 @@
+site_name: checkpointing
+
+theme:
+  name: material
+
+nav:
+  - "User Guide": index.md
+  - "Behavior on Code Change": behavior.md
+  - "Caveats": caveats.md
+  - "Comparison with Similar Packages": comparison.md
+
+markdown_extensions:
+  - footnotes
+  - admonition
+  - pymdownx.tabbed:
+      alternate_style: true 
+  - pymdownx.highlight:
+      anchor_linenums: true
+      use_pygments: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - pymdownx.details
+
+repo_url: https://github.com/Vopaaz/checkpointing
+repo_name: Vopaaz/checkpointing

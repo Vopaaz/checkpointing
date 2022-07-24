@@ -127,7 +127,9 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
-docs
+
+apidoc/
+docs/site
 
 .vscode
 .html-coverage
@@ -136,3 +138,4 @@ docs
 
 testworkspace/
 .checkpointing/
+.joblib/

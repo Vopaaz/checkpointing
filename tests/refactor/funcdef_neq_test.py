@@ -35,6 +35,20 @@ def test_change_get_slice():
 
     assert_ast_neq(c1, c2)
 
+
+def test_change_logic():
+    c1 = """
+    def foo(a):
+        return a + 1
+    """
+
+    c2 = """
+    def foo(a):
+        return a - 1
+    """
+
+    assert_ast_neq(c1, c2)
+
 def test_different_internal_lambda_logic():
     c1 = """
     def foo(a):

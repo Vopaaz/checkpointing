@@ -72,14 +72,15 @@ class FunctionDefinitionUnifier:
 
         By unified, it means that
         - Type annotations are ignored
-        - Function name is unified
         - Arguments, position-only arguments, and keyword-only arguments are renamed based on their
           lexicographic order
         - Varargs and kwargs are renamed with a unique name
         - Default values of the arguments
         - Local variables are renamed based on their order of occurrence
         - Global variables are renamed based on their order of occurrence
+        - Function name is considered as a local variable, and is also renamed
         - AugAssign statements (a += 1) are replaced with normal assign statements (a = a + 1)
+        - All decorators are removed. TODO: This is essentially a problem, but there is no good fix for the moment
 
         Therefore, changing any aspect mentioned above will not change the returned AST dump.
         Also trivially, AST dump is not affected by the code formatting and comments.
@@ -157,6 +158,8 @@ class _FunctionDefinitionTransformer(ast.NodeTransformer):
         self,
         node: Union[ast.FunctionDef, ast.AsyncFunctionDef, ast.Lambda],
     ) -> Union[ast.FunctionDef, ast.AsyncFunctionDef, ast.Lambda]:
+        
+        node.decorator_list = []
 
         if isinstance(node, ast.Lambda):
             new_function_name = next(self.local_names)
