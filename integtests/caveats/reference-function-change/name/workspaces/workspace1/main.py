@@ -7,6 +7,7 @@ def qux(x):
 
 @checkpoint()
 def foo(x):
+    print("Running")
     return qux(x)
 
 

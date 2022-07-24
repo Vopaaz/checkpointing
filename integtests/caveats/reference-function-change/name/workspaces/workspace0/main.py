@@ -7,6 +7,7 @@ def bar(x):
 
 @checkpoint()
 def foo(x):
+    print("Running")
     return bar(x)
 
 
