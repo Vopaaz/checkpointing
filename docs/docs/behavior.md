@@ -48,6 +48,8 @@ and cases where it would be correctly re-executed.
       Running it gives you another result,
       and it shows how the function gets skipped or re-executed.
 
+    If you want to try it out, please remember to clear the cache directory
+    (`./.checkpointing` by default) between two cases, as one case might affect another.
 
 ## Skipped cases
 
@@ -64,7 +66,7 @@ and cases where it would be correctly re-executed.
         return a
 
     if __name__ == "__main__":
-        foo(1)
+        print(foo(1))
     ```
 
     ```text title="Output"
@@ -83,7 +85,7 @@ and cases where it would be correctly re-executed.
         return x
 
     if __name__ == "__main__":
-        foo(1)
+        print(foo(1))
     ```
 
     ```text title="Output"
@@ -181,7 +183,6 @@ The result will be retrieved from the cache.
     ```
 
     ```text title="Output"
-    Running
     1
     ```
 

@@ -43,6 +43,8 @@ We would also give suggestions on how to avoid those cases.
       Running it gives you another result,
       and it shows how the function gets skipped or re-executed.
 
+    If you want to try it out, please remember to clear the cache directory
+    (`./.checkpointing` by default) between two cases, as one case might affect another.
 
 ## Changing reference function
 
@@ -105,6 +107,7 @@ renaming a reference function will cause the decorated function to re-execute.
 
     @checkpoint()
     def foo(x):
+        print("Running")
         return bar(x)
 
     if __name__ == "__main__":
@@ -126,6 +129,7 @@ renaming a reference function will cause the decorated function to re-execute.
 
     @checkpoint()
     def foo(x):
+        print("Running")
         return qux(x)
 
     if __name__ == "__main__":

@@ -43,7 +43,9 @@ However, we handle some cases better than them, as explained below.
     - Next, modify the script and change it to what's shown in the "2nd run" tab.
       Running it gives you another result,
       and it shows how the function gets skipped or re-executed.
-
+    
+    If you want to try it out, please remember to clear the cache directory
+    (`./.checkpointing` by default) between two cases, as one case might affect another.
 
 ## cachier
 
