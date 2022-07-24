@@ -5,11 +5,11 @@ with open(r"README.md", "r", encoding="utf-8") as f:
 
 setup(
     name="checkpointing",
-    version="0.0.5",
+    version="0.1.0",
     author="Vopaaz",
     author_email="liyifan945@gmail.com",
     url="https://github.com/Vopaaz/checkpointing",
-    description="WIP",
+    description="Persistent cache for Python functions",
     long_description=long_description,
     long_description_content_type="text/markdown",
     packages=find_packages(),
