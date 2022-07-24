@@ -3,7 +3,7 @@ This page describes the cases where the checkpointed function could be correctly
 and cases where it would be correctly re-executed.
 
 !!! attention
-    All examples in this page leads to the correct result.
+    All examples in this page have correct results.
     However, there are some cases where the function will be incorrectly skipped,
     or not using the cache as expected.
     Please see [Caveats](caveats.md).

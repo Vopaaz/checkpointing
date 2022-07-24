@@ -167,8 +167,7 @@ foo.rerun(arg)
 
 where `foo` is the decorated function.
 This would be equivalent to directly invoking `foo(arg)`.
-
-Note that the return value of this rerun will be cached to the disk and overwrite the previous value.
+The return value of this rerun will be cached to the disk and overwrite the previous one, if it exists.
 
 This is useful if some factors that would affect the function return value has changed,
 but `checkpoint` failed to capture this difference, as described in the [Caveats](caveats.md).

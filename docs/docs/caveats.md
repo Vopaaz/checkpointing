@@ -47,7 +47,7 @@ We would also give suggestions on how to avoid those cases.
 ## Changing reference function
 
 checkpointing only watches the code change of the decorated function itself.
-Any reference function are only identified by their reference,
+Any function invoked within it is only identified by reference,
 meaning that the change of code logic cannot be captured.
 
 === "1st run"
@@ -92,7 +92,7 @@ meaning that the change of code logic cannot be captured.
 
 Unfortunately the change in `bar` is not captured, resulting in a wrong return value.
 
-The other side of this same problem is that, 
+The other side of this same problem is that,
 renaming a reference function will the cause the decorated function to re-execute.
 
 === "1st run"
@@ -225,6 +225,9 @@ Change in the object method code cannot be captured by the checkpoint.
 
 Unfortunately the change in `Bar.baz` is not captured, resulting in a wrong return value.
 
+The other side of this same problem is that,
+renaming a method of the object will the cause the decorated function to re-execute.
+
 
 === "1st run"
 
@@ -251,6 +254,7 @@ Unfortunately the change in `Bar.baz` is not captured, resulting in a wrong retu
     ```
 
     ```text title="Output"
+    Running
     1
     ```
 
@@ -263,12 +267,13 @@ Unfortunately the change in `Bar.baz` is not captured, resulting in a wrong retu
         def __init__(self) -> None:
             self.x = 0
 
-        def baz(self):
-            pass
+        def qux(self):
+            self.x += 1
 
     @checkpoint()
     def foo(bar):
-        bar.baz()
+        print("Running")
+        bar.qux()
         return bar
 
     if __name__ == "__main__":
@@ -278,19 +283,19 @@ Unfortunately the change in `Bar.baz` is not captured, resulting in a wrong retu
     ```
 
     ```text title="Output"
+    Running
     1
     ```
 
-
+Although `bar.baz()` and `bar.qux()` are doing the same thing,
+`foo` is re-executed.
 
 We suggest to only use objects whose methods are known to be "static",
 e.g. those from an external library.
 
 
 
-## Falsely re-executed cases
-
-### Randomness
+## Randomness
 
 If the input parameter of a function is the result of a non-deterministic procedure,
 user should properly set the random seed or equivalent fields to make sure that the parameters passed to the checkpointed function are exactly the same.
@@ -309,7 +314,7 @@ Although this is not a deflect of this package, it might cause problems in many 
         X = [[0], [1], [2], [3]]
         y = [0, 0, 1, 1]
         model = LogisticRegression(solver="saga") # saga makes the model random
-        return model.fit(X, y) 
+        return model.fit(X, y)
 
 
     @checkpoint()
@@ -341,7 +346,7 @@ Although this is not a deflect of this package, it might cause problems in many 
         X = [[0], [1], [2], [3]]
         y = [0, 0, 1, 1]
         model = LogisticRegression(solver="saga") # saga makes the model random
-        return model.fit(X, y) 
+        return model.fit(X, y)
 
 
     @checkpoint()
@@ -382,7 +387,7 @@ so that its internal state will be reproducible as long as the training data is 
             X = [[0], [1], [2], [3]]
             y = [0, 0, 1, 1]
             model = LogisticRegression(solver="saga", random_state=42)
-            return model.fit(X, y) 
+            return model.fit(X, y)
 
 
         @checkpoint()
@@ -414,7 +419,7 @@ so that its internal state will be reproducible as long as the training data is 
             X = [[0], [1], [2], [3]]
             y = [0, 0, 1, 1]
             model = LogisticRegression(solver="saga", random_state=42)
-            return model.fit(X, y) 
+            return model.fit(X, y)
 
 
         @checkpoint()
@@ -438,7 +443,7 @@ Alternatively, you can also checkpoint the function that builds the model.
 The return values in the subsequent runs are guaranteed to be the same as the 1st run.
 
 
-### Irrelevant code changes
+## Code changes
 
 Although checkpointing is able to ignore many irrelevant modifications, such as renaming local variables,
 in many cases it would still think some code change is significant enough such that the return value would change.
