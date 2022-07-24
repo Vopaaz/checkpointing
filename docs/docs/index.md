@@ -30,13 +30,13 @@ calc is running for 1, 2
 result: 3
 ```
 
-Now the return value has been cached to disk, and if you run this script again, the output will be
+Now the return value has been cached to disk, and if you rerun this script, the output will be
 
 ```text
 result: 3
 ```
 
-The execution of `calc` has been skipped, but the result value is retrieved from the disk and returned as normal.
+The execution of `calc` is skipped, but the result value is retrieved from the disk and returned as expected.
 
 However, if the function call context has changed, the function will be re-executed and return the new value.
 For example,
@@ -44,13 +44,13 @@ For example,
 - if it is passed with different arguments, e.g. `calc(1, 3)`, `calc` would rerun and return `4`
 - if the code logic has changed, e.g. `return a - b`, `calc` would rerun and return `-1`
 
-The `checkpoint` has a wise built-in strategy to decide when it needs or doesn't need to re-execute the function.
+The `checkpoint` has a built-in wise strategy to decide when it needs or doesn't need to re-execute the function.
 More details are discussed in [Behavior on Code Change](behavior.md).
-This is also the main advantage of `checkpointing` comparing to other similar packages,
+This is also the main advantage of `checkpointing` compared to other similar packages,
 see [Comparing with similar packages](comparison.md).
 
 !!! attention
-    However, there are some cases where the rerun decision cannot be correctly made.
+    However, there are some cases where the checkpoint cannot correctly make the rerun decision.
     Please read through the [Caveats](caveats.md) page and avoid those patterns.
 
 Although the package focuses on persisting the cache across different executions,
@@ -67,7 +67,7 @@ The built-in `checkpoint` is designed for projects that
 on the same set of arguments
 - are somewhat "experimental", so it involves a lot of code changes back and forth
 
-Such use cases are very common in the preliminary stage of machine learning projects, for example.
+For example, such use cases are very common in the preliminary stage of machine learning projects.
 
 
 ## Installation
@@ -111,7 +111,7 @@ if you want to store them elsewhere, you can do
 #### Behavior on internal error
 
 During the execution, there could be unexpected errors within the checkpoint.
-When this happens, the normal behavior is to give you a warning,
+When this happens, the default behavior is to give you a warning,
 and just rerun the function without the caching stuff.
 This ensures that your code won't fail because of using this package.
 However, you can change this behavior with the `on_error` option.
@@ -126,14 +126,14 @@ This will terminate the function call and raise the internal error.
 @checkpoint(on_error="ignore")
 ```
 
-This will just let the function rerun every time, without raising any warning.
+This will rerun the function when an internal error occurs without raising any warning.
 
 
 #### Pickle Protocol
 
 The function return value will be saved with the built-in [pickle](https://docs.python.org/3/library/pickle.html) module.
 We use the `pickle.DEFAULT_PROTOCOL` by default. 
-However, if you want to change the protocol used, you could use the `cache_pickle_protocol` option.
+However, if you want to change the protocol, you could use the `cache_pickle_protocol` option.
 
 ```python
 import pickle
@@ -143,7 +143,7 @@ import pickle
 
 #### Global setting
 
-You can change the above-mentioned configurations for all checkpoints by modifying a global dictionary.
+By modifying a global dictionary, you can change the configurations for all checkpoints.
 
 ```python
 from checkpointing import defaults
@@ -154,7 +154,7 @@ defaults["checkpoint.on_error"] = "ignore"
 defaults["cache.pickle_protocol"] = pickle.HIGHEST_PROTOCOL
 ```
 
-Please set this at the top-level of your module/script, before you create any `checkpoint`.
+Please set this at the top level of your module/script, before you create any `checkpoint`.
 
 
 ### Force rerun a checkpoint
@@ -169,7 +169,7 @@ where `foo` is the decorated function.
 This would be equivalent to directly invoking `foo(arg)`.
 The return value of this rerun will be cached to the disk and overwrite the previous one, if it exists.
 
-This is useful if some factors that would affect the function return value has changed,
+This is useful if some factors that would affect the function return value have changed,
 but `checkpoint` failed to capture this difference, as described in the [Caveats](caveats.md).
 
 ## Usage notes
@@ -179,7 +179,7 @@ Please be aware that
 - Since the function will be skipped if it was cached before, user shouldn't mutate an argument in the function body
   (as required by the definition of pure function)
 - If the project involves randomness, it's the user's responsibility to set the random seed or random state,
-  such that the arguments and reference global variables of the cached function are exactly identical
+  such that the arguments and reference global variables of the cached function are identical
 - The built-in strategy to determine if a function needs to be re-executed is imperfect.
   Please see [Caveats](caveats.md),
   and avoid those cases when the rerun condition cannot be correctly determined.

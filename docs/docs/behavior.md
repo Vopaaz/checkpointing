@@ -3,7 +3,7 @@ This page describes the cases where the checkpointed function could be correctly
 and cases where it would be correctly re-executed.
 
 !!! attention
-    All examples in this page have correct results.
+    All examples on this page have correct results.
     However, there are some cases where the function will be incorrectly skipped,
     or not using the cache as expected.
     Please see [Caveats](caveats.md).
@@ -42,9 +42,9 @@ and cases where it would be correctly re-executed.
 
     This denotes:
 
-    - At first, you have the script in the "1st run" tab.
+    - First, you have the script in the "1st run" tab.
       Running it gives you the corresponding output.
-    - Next you modify the script and change it to what's shown in the "2nd run" tab.
+    - Next, modify the script and change it to what's shown in the "2nd run" tab.
       Running it gives you another result,
       and it shows how the function gets skipped or re-executed.
 
@@ -275,9 +275,8 @@ The result will be retrieved from the cache.
 When executing the modified script, `foo` will be skipped as the checkpoint figured that the actual value of `a` is `1` in both executions.
 The result will be retrieved from the cache.
 
-This also works if you remove or add default value to a parameter.
-In short - checkpoint does not care about the defaults,
-it only consider what arguments are actually plugged in.
+This also works if you remove or add a default value to a parameter.
+In short, checkpoint does not care about the defaults; it only considers what arguments are plugged in.
 
 ### Changing value of irrelevant global variables
 

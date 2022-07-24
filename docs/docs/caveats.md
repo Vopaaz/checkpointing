@@ -1,5 +1,5 @@
 This page introduces the cases where you would expect the function to be re-executed,
-but it's actually skipped by checkpointing and the vice versa.
+but it's actually skipped by checkpointing and vice versa.
 We would also give suggestions on how to avoid those cases.
 
 
@@ -37,9 +37,9 @@ We would also give suggestions on how to avoid those cases.
 
     This denotes:
 
-    - At first, you have the script in the "1st run" tab.
+    - First, you have the script in the "1st run" tab.
       Running it gives you the corresponding output.
-    - Next you modify the script and change it to what's shown in the "2nd run" tab.
+    - Next, modify the script and change it to what's shown in the "2nd run" tab.
       Running it gives you another result,
       and it shows how the function gets skipped or re-executed.
 
@@ -90,10 +90,10 @@ meaning that the change of code logic cannot be captured.
     0
     ```
 
-Unfortunately the change in `bar` is not captured, resulting in a wrong return value.
+Unfortunately, the change in `bar` is not captured, resulting in a wrong return value.
 
 The other side of this same problem is that,
-renaming a reference function will the cause the decorated function to re-execute.
+renaming a reference function will cause the decorated function to re-execute.
 
 === "1st run"
 
@@ -140,9 +140,9 @@ renaming a reference function will the cause the decorated function to re-execut
 Although `qux` and `bar` are doing the same thing, `foo` is re-executed.
 
 
-We suggest to decouple your code logic,
+We suggest decoupling your code logic,
 such that the checkpointed function only invoke other functions that are known to be "static",
-e.g. those from an external library.
+e.g., those from an external library.
 Instead of invoking another custom function whose logic or name is likely to change in the future,
 pass its result as an argument.
 
@@ -166,7 +166,7 @@ if __name__ == "__main__":
 ## Changing object method
 
 The object method is identified by its name only.
-Change in the object method code cannot be captured by the checkpoint.
+Checkpoint cannot capture changes in the object method code.
 
 
 === "1st run"
@@ -223,10 +223,10 @@ Change in the object method code cannot be captured by the checkpoint.
     1
     ```
 
-Unfortunately the change in `Bar.baz` is not captured, resulting in a wrong return value.
+Unfortunately, the change in `Bar.baz` is not captured, resulting in a wrong return value.
 
 The other side of this same problem is that,
-renaming a method of the object will the cause the decorated function to re-execute.
+renaming a method of the object will cause the decorated function to re-execute.
 
 
 === "1st run"
@@ -290,17 +290,17 @@ renaming a method of the object will the cause the decorated function to re-exec
 Although `bar.baz()` and `bar.qux()` are doing the same thing,
 `foo` is re-executed.
 
-We suggest to only use objects whose methods are known to be "static",
-e.g. those from an external library.
+We suggest only to use objects whose methods are known to be "static",
+e.g., those from an external library.
 
 
 
 ## Randomness
 
 If the input parameter of a function is the result of a non-deterministic procedure,
-user should properly set the random seed or equivalent fields to make sure that the parameters passed to the checkpointed function are exactly the same.
+user should properly set the random seed or equivalent fields to ensure that the parameters passed to the checkpointed function are precisely the same.
 
-Although this is not a deflect of this package, it might cause problems in many common use cases in data science field if not paying attention.
+Although this is not a deflect of this package, it might cause problems in many common use cases in the data science field if not paid attention to.
 
 
 === "1st run"
@@ -369,7 +369,7 @@ Although this is not a deflect of this package, it might cause problems in many 
 
 There is no difference between the two executed scripts,
 however, the randomness in the `LogisticRegression` model causes its internal state to be different after the two estimations.
-Therefore, in the 2nd run, the checkpoint cannot tell that this `model` is the same one as last time, so `predict` is re-executed.
+Therefore, in the 2nd run, the checkpoint cannot tell that this `model` is the same as last time, so `predict` is re-executed.
 
 The solution is to add a `random_state` parameter to the estimator,
 so that its internal state will be reproducible as long as the training data is the same.
@@ -445,8 +445,8 @@ The return values in the subsequent runs are guaranteed to be the same as the 1s
 
 ## Code changes
 
-Although checkpointing is able to ignore many irrelevant modifications, such as renaming local variables,
-in many cases it would still think some code change is significant enough such that the return value would change.
+Although checkpointing can ignore many irrelevant modifications, such as renaming local variables,
+in many cases, it would still think some code change is significant enough such that the return value would change.
 
 
 

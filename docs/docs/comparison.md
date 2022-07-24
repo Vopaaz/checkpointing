@@ -1,7 +1,7 @@
 # Comparison with Similar Packages
 
 Some other packages have similar functionality as `checkpointing`.
-However we handle some cases better than them, as explained below.
+However, we handle some cases better than them, as explained below.
 
 
 ??? info "How the cases are written"
@@ -38,9 +38,9 @@ However we handle some cases better than them, as explained below.
 
     This denotes:
 
-    - At first, you have the script in the "1st run" tab.
+    - First, you have the script in the "1st run" tab.
       Running it gives you the corresponding output.
-    - Next you modify the script and change it to what's shown in the "2nd run" tab.
+    - Next, modify the script and change it to what's shown in the "2nd run" tab.
       Running it gives you another result,
       and it shows how the function gets skipped or re-executed.
 
@@ -53,7 +53,7 @@ The following cases are tested with
 ### Code change
 
 cachier does not watch the function code at all,
-therefore, if the code logic has changed, it will not rerun which leads to wrong result.
+therefore, if the code logic has changed, it will not rerun, leading to erroneous results.
 
 
 === "1st run"
@@ -98,7 +98,7 @@ and gives the correct result, `-1`.
 
 ### Limited hashable types
 
-cachier can only work on very limited data types as arguments.
+cachier can only work on minimal data types as arguments.
 
 ```python
 import numpy as np
@@ -114,7 +114,7 @@ if __name__ == "__main__":
 ```
 
 Run this script and it will raise a `TypeError`, because it cannot hash the `numpy.ndarray` object.
-You will have to write your own hasher, even on this very commonly used data type.
+You will have to write your own hasher, even on this commonly used data type.
 
 In contrast, checkpoint has built-in support for commonly used data manipulation packages,
 such as numpy and pandas.
@@ -168,7 +168,7 @@ which means that even adding comments or reformatting the code will cause a func
     ```
 
 The only difference in the code is a line of comment,
-which shouldn't affect the return value of the function.
+which shouldn't affect the function's return value.
 However, joblib failed to use the cache, causing redundant re-compute.
 
 Replace joblib with checkpointing, in the 2nd run, `foo` won't be executed.
@@ -226,7 +226,7 @@ Even though the value of the reference global variable is changed to `2`,
 the execution of `foo` is skipped and the previous cache is returned, which is wrong.
 
 Replace joblib with checkpointing, in the second execution of the script, 
-`foo` will be invoked and the correct result `2` will be returned.
+`foo` will be invoked and return the correct result `2`.
 
 
 [^1]: These are the latest versions as of 2022/07/18, the date when this document is written.
