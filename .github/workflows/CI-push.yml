@@ -1,9 +1,6 @@
 name: Testing on Push
 
-on:
-  push:
-    branches-ignore:
-      - "master"
+on: push
 
 jobs:
   build:

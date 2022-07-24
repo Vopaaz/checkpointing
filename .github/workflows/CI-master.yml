@@ -14,9 +14,9 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.7", "3.8", "3.9", "3.10"]
-        runs-on: ["ubuntu-latest", "windows-latest"]
 
-    runs-on: "${{ matrix.runs-on }}"
+    # Ubuntu is tested on all pushes
+    runs-on: windows-latest
 
     steps:
       - uses: actions/checkout@v3
