@@ -5,7 +5,7 @@ with open(r"README.md", "r", encoding="utf-8") as f:
 
 setup(
     name="checkpointing",
-    version="0.1.0",
+    version="0.1.1",
     author="Vopaaz",
     author_email="liyifan945@gmail.com",
     url="https://github.com/Vopaaz/checkpointing",

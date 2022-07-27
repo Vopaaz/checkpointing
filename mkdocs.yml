@@ -8,6 +8,7 @@ nav:
   - "Behavior on Code Change": behavior.md
   - "Caveats": caveats.md
   - "Comparison with Similar Packages": comparison.md
+  - "Changelog": changelog.md
 
 markdown_extensions:
   - footnotes
