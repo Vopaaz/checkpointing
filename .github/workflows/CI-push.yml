@@ -1,8 +1,14 @@
-name: Testing on Push
+name: Testing on Push and PR
 
 on: 
   push:
+    branches:
+      - '**'
     tags-ignore:
+      - '**'
+
+  pull_request:
+    branches:
       - '**'
 
 jobs:
