@@ -1,5 +1,3 @@
-import pickle
-
 defaults = {
     "cache.filesystem.directory": ".checkpointing",
     "cache.pickle_protocol": 5,
