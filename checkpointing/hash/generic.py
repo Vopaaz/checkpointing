@@ -1,46 +1,58 @@
-from typing import Any
-import dill
-from checkpointing.hash._typing import Hash
-from types import ModuleType, FunctionType
 import inspect
-from checkpointing.refactor.funcdef import FunctionDefinitionUnifier
-from checkpointing.exceptions import HashFailedWarning
-from types import GeneratorType
+from types import FunctionType, GeneratorType, ModuleType
+from typing import Any
 from warnings import warn
-import pickle
+
+import dill
+from checkpointing.exceptions import HashFailedWarning
+from checkpointing.hash.stream import HashStream
+from checkpointing.refactor.funcdef import FunctionDefinitionUnifier
+from checkpointing.util import _pickle as pickle
 
 
-def hash_string(s: str) -> bytes:
-    bytes = s.encode("utf-8")
-    return bytes
+def hash_with_dill(stream: HashStream, obj: Any, pickle_protocol: int) -> None:
+    dill.dump(
+        obj,
+        stream,
+        # Although we ported pickle5 for python 3.7-, dill is not aware of it. Using protocol = 5 for dill will cause it to fail
+        protocol=min(pickle_protocol, dill.HIGHEST_PROTOCOL),
+        byref=True,
+        recurse=False,
+    )
 
 
-def hash_with_dill(obj: Any, pickle_protocol: int) -> bytes:
-    return dill.dumps(obj, protocol=pickle_protocol, byref=True, recurse=False)
+def hash_with_pickle(stream: HashStream, obj: Any, pickle_protocol: int) -> None:
+    pickle.dump(stream, obj, protocol=pickle_protocol)
 
 
-def hash_with_pickle(obj: Any, pickle_protocol: int) -> bytes:
-    return pickle.dumps(obj, protocol=pickle_protocol)
+def hash_string(stream: HashStream, s: str) -> None:
+    bytes_ = s.encode("utf-8")
+    stream.write(bytes_)
 
 
-def hash_generator(generator: GeneratorType) -> bytes:
-    return hash_string(generator.__qualname__)
+def hash_with_qualname(stream: HashStream, type_: str, obj: Any) -> None:
+    hash_string(stream, f"{type_}::{obj.__qualname__}")
 
 
-def hash_generic(obj: Any, pickle_protocol: int):
+def hash_generic(stream: HashStream, obj: Any, pickle_protocol: int) -> None:
+
+    for test, type_ in [
+        (inspect.isgenerator, "generator"),
+    ]:
+        if test(obj):
+            hash_with_qualname(stream, type_, obj)
+            return
 
     for hasher in [hash_with_pickle, hash_with_dill]:
         try:
-            return hasher(obj, pickle_protocol)
+            hasher(stream, obj, pickle_protocol)
+            return
         except:
             pass
 
-    if inspect.isgenerator(obj):
-        return hash_generator(obj)
-
     warn(
-        f"No generic hasher found for object: {str(obj)} of type: {type(obj)}, using its direct string representation as hash value. "
+        f"No generic hasher found for object: {str(obj)} of type: {type(obj)}, using its __repr__ as hash value. "
         "This could lead to incorrect results",
         category=HashFailedWarning,
     )
-    return hash_string(str(obj))
+    hash_string(stream, repr(obj))

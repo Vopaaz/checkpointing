@@ -3,7 +3,7 @@ test: unit integ
 unit:
 	pytest tests/ checkpointing/
 
-ws = 0.1
+ws = 0.2
 
 integ:
 	python -m integtests.run $(kw) --wait-sec $(ws)

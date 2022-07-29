@@ -1,8 +1,7 @@
 from typing import Any
 from checkpointing.hash.generic import hash_generic
-from checkpointing.hash.specific import hash_with_specific, hashable_with_specific
 from checkpointing.config import defaults
-import hashlib
+from checkpointing.hash.stream import HashStream
 
 
 def hash_anything(*objs: Any, algorithm: str = None, pickle_protocol: int = None) -> str:
@@ -32,7 +31,9 @@ def hash_anything(*objs: Any, algorithm: str = None, pickle_protocol: int = None
     >>> f2 = foo()
     >>> next(f2) # Now the state of f1 and f2 are different
     0
-    >>> hash_anything(f1) == hash_anything(f2) # But they are refere
+    >>> # But the are hashed by reference only,
+    >>> # So their hash value is considered the same
+    >>> hash_anything(f1) == hash_anything(f2) 
     True
     """
 
@@ -42,16 +43,9 @@ def hash_anything(*objs: Any, algorithm: str = None, pickle_protocol: int = None
     if pickle_protocol is None:
         pickle_protocol = defaults["hash.pickle_protocol"]
 
-    hash_base = hashlib.new(algorithm)
+    hash_stream = HashStream(algorithm)
 
     for obj in objs:
+        hash_generic(hash_stream, obj, pickle_protocol)
 
-        if hashable_with_specific(obj):
-            bytes_ = hash_with_specific(obj)
-
-        else:
-            bytes_ = hash_generic(obj, pickle_protocol)
-
-        hash_base.update(bytes_)
-
-    return hash_base.hexdigest()
+    return hash_stream.hexdigest()

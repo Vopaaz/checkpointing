@@ -4,7 +4,7 @@ from checkpointing import defaults
 from checkpointing.exceptions import CheckpointNotExist
 import pathlib
 import os
-import pickle
+from checkpointing.util import _pickle as pickle
 
 
 class PickleFileCache(CacheBase):

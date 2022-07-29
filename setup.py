@@ -3,6 +3,9 @@ from setuptools import setup, find_packages
 with open(r"README.md", "r", encoding="utf-8") as f:
     long_description = f.read()
 
+with open('requirements.txt') as f:
+    install_requires = f.read().splitlines()
+
 setup(
     name="checkpointing",
     version="0.1.1",
@@ -13,9 +16,7 @@ setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     packages=find_packages(),
-    install_requires=[
-        "dill>=0.3.5",
-    ],
+    install_requires=install_requires,
     python_requires=">=3.7, <=3.10",
     classifiers=[
         "Programming Language :: Python :: 3.7",

@@ -1,5 +1,5 @@
 from checkpointing.cache.pickle_file import PickleFileCache, CheckpointNotExist
-import pickle
+from checkpointing.util import _pickle as pickle
 from tests.testutils import tmpdir, rmdir_before
 from pytest import raises
 
