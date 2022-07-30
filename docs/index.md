@@ -8,6 +8,15 @@ Persistent cache for Python functions.
 When the function is called later with the same arguments, it automatically skips the function execution,
 retrieves the cached value and return.
 
+
+[^1]: We take the alternative definition of the "pure function", meaning that it only has property 2:
+"the function has no side effects (no mutation of local static variables, non-local variables,
+mutable reference arguments or input/output streams)".
+We do allow the return value to vary due to changes in non-local variables and other factors,
+as it's often the case in project development.
+
+
+
 For example,
 
 ```python
@@ -132,14 +141,22 @@ This will rerun the function when an internal error occurs without raising any w
 #### Pickle Protocol
 
 The function return value will be saved with the built-in [pickle](https://docs.python.org/3/library/pickle.html) module.
-We use the `pickle.DEFAULT_PROTOCOL` by default. 
+We use [protocol 5](https://peps.python.org/pep-0574/) by default for all Python versions,
+in favor of its ability to efficiently handle large data. [^2]
 However, if you want to change the protocol, you could use the `cache_pickle_protocol` option.
+
+[^2]: For Python 3.7, we use the backport [pickle5](https://pypi.org/project/pickle5/) package to support it.
 
 ```python
 import pickle
 
-@checkpoint(cache_pickle_protocol=pickle.HIGHEST_PROTOCOL)
+@checkpoint(cache_pickle_protocol=pickle.DEFAULT_PROTOCOL)
 ```
+
+!!! warning
+
+    Using protocol earlier than 5 will cause significantly more memory when saving large data objects.
+
 
 #### Global setting
 
@@ -184,10 +201,3 @@ Please be aware that
   Please see [Caveats](caveats.md),
   and avoid those cases when the rerun condition cannot be correctly determined.
 
-
-
-[^1]: We take the alternative definition of the "pure function", meaning that it only has property 2:
-"the function has no side effects (no mutation of local static variables, non-local variables,
-mutable reference arguments or input/output streams)".
-We do allow the return value to vary due to changes in non-local variables and other factors,
-as it's often the case in project development.
