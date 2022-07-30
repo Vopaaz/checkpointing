@@ -4,9 +4,6 @@ from setuptools import setup, find_packages
 with open(r"README.md", "r", encoding="utf-8") as f:
     long_description = f.read()
 
-with open("requirements.txt") as f:
-    install_requires = f.read().splitlines()
-
 
 def get_install_requires():
     req = ["dill>=0.3.5"]
