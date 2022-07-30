@@ -8,9 +8,9 @@ def test_too_high_protocol_raises_error():
 
 def test_dump_load_file(mkdir_before, rmdir_after):
     with open(tmpdir.joinpath("pickle.data"), "wb") as f:
-        _pickle.dump(1, f)
+        _pickle.dump(1, f, 5)
 
     with open(tmpdir.joinpath("pickle.data"), "rb") as f:
-        n = _pickle.load(f)
+        n = _pickle.load(f, 5)
 
     assert n == 1

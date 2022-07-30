@@ -24,13 +24,9 @@ def get_pickle_module(protocol: int):
         raise RuntimeError(f"pickle protocol {protocol} is not supported")
 
 
-def dump(obj: Any, file: IOBase, protocol: int = None) -> None:
-    if protocol is None:
-        protocol = defaults["hash.pickle_protocol"]
+def dump(obj: Any, file: IOBase, protocol: int) -> None:
     return get_pickle_module(protocol).dump(obj, file, protocol)
 
 
-def load(file: IOBase, protocol: int = None) -> Any:
-    if protocol is None:
-        protocol = defaults["hash.pickle_protocol"]
+def load(file: IOBase, protocol: int) -> Any:
     return get_pickle_module(protocol).load(file)

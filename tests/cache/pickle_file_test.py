@@ -1,4 +1,5 @@
 from checkpointing.cache.pickle_file import PickleFileCache, CheckpointNotExist
+from checkpointing.config import defaults
 from checkpointing.util import _pickle as pickle
 from tests.testutils import tmpdir, rmdir_before
 from pytest import raises
@@ -19,7 +20,7 @@ def test_cache_saves_result_to_pickle():
     assert filepath.exists()
 
     with open(filepath, "rb") as f:
-        assert pickle.load(f) == value
+        assert pickle.load(f, defaults["cache.pickle_protocol"]) == value
 
 
 def test_cache_retrieves_result():
