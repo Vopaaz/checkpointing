@@ -15,18 +15,19 @@ def get_pickle_module(protocol: int):
         return pickle
 
     elif protocol == 5:
-        import pickle5 # Cannot import this globally, because 3.8+ won't install it
+
+        import pickle5  # Cannot import this globally, because 3.8+ won't install it
+
         return pickle5
 
     else:
         raise RuntimeError(f"pickle protocol {protocol} is not supported")
 
 
-def dump(obj: Any, file: IOBase, protocol: int=None) -> None:
+def dump(obj: Any, file: IOBase, protocol: int = None) -> None:
     if protocol is None:
         protocol = defaults["hash.pickle_protocol"]
     return get_pickle_module(protocol).dump(obj, file, protocol)
-
 
 
 def load(file: IOBase, protocol: int = None) -> Any:
