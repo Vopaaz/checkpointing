@@ -1,6 +1,6 @@
 from checkpointing.cache.pickle_file import PickleFileCache, CheckpointNotExist
 from checkpointing.config import defaults
-from checkpointing.util import _pickle as pickle
+from checkpointing.util import pickle
 from tests.testutils import tmpdir, rmdir_before
 from pytest import raises
 

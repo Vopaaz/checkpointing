@@ -7,7 +7,7 @@ import dill
 from checkpointing.exceptions import HashFailedWarning
 from checkpointing.hash.stream import HashStream
 from checkpointing.refactor.funcdef import FunctionDefinitionUnifier
-from checkpointing.util import _pickle as pickle
+from checkpointing.util import pickle
 from checkpointing.logging import logger
 
 
