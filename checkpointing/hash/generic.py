@@ -8,6 +8,7 @@ from checkpointing.exceptions import HashFailedWarning
 from checkpointing.hash.stream import HashStream
 from checkpointing.refactor.funcdef import FunctionDefinitionUnifier
 from checkpointing.util import _pickle as pickle
+from checkpointing.logging import logger
 
 
 def hash_with_dill(stream: HashStream, obj: Any, pickle_protocol: int) -> None:
@@ -22,7 +23,7 @@ def hash_with_dill(stream: HashStream, obj: Any, pickle_protocol: int) -> None:
 
 
 def hash_with_pickle(stream: HashStream, obj: Any, pickle_protocol: int) -> None:
-    pickle.dump(stream, obj, protocol=pickle_protocol)
+    pickle.dump(obj, stream, protocol=pickle_protocol)
 
 
 def hash_string(stream: HashStream, s: str) -> None:
