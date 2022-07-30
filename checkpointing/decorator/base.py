@@ -104,7 +104,7 @@ class DecoratorCheckpoint(ABC, Generic[ReturnValue]):
         def rerun(*args, **kwargs) -> ReturnValue:
             context, context_id = self.__get_context_and_id(original_func, args, kwargs)
 
-            logger.info(f"Forcing rerun of {original_func.__qualname__}(**{context.arguments})")
+            logger.info(f"Forcing rerun of {context.full_name} with args {context.arguments}")
 
             res, run_time = timed_run(original_func, *args, **kwargs)
 

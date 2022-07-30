@@ -1,6 +1,5 @@
 from io import IOBase
 import pickle
-import pickle5
 from typing import Any
 from checkpointing.config import defaults
 
@@ -16,6 +15,7 @@ def get_pickle_module(protocol: int):
         return pickle
 
     elif protocol == 5:
+        import pickle5 # Cannot import this globally, because 3.8+ won't install it
         return pickle5
 
     else:
