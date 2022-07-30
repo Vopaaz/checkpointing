@@ -4,7 +4,7 @@ from checkpointing import defaults
 from checkpointing.exceptions import CheckpointNotExist
 import pathlib
 import os
-import pickle
+from checkpointing.util import pickle
 
 
 class PickleFileCache(CacheBase):
@@ -15,7 +15,7 @@ class PickleFileCache(CacheBase):
         Args:
             directory: the directory where the files will be saved. The directory will be created if it does not exist.
                        If None, use the global default `cache.filesystem.directory`
-            pickle_protocol: the protocol used when pickling files. If None, use the global default 
+            pickle_protocol: the protocol used when pickling files. If None, use the global default
                              `cache.pickle_protocol`
         """
 
@@ -65,4 +65,4 @@ class PickleFileCache(CacheBase):
             raise CheckpointNotExist
 
         with open(path, mode="rb") as file:
-            return pickle.load(file)
+            return pickle.load(file, protocol=self.__pickle_protocol)
