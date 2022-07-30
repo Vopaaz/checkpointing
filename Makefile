@@ -1,3 +1,5 @@
+.PHONY: test unit integ doc mandoc-serve mandoc apidoc
+
 test: unit integ
 
 unit:
