@@ -1,0 +1,2 @@
+dill>=0.3.5
+pickle5>=0.0.12; python_version < "3.8"
