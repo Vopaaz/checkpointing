@@ -24,7 +24,7 @@ class PickleFileCache(CacheBase):
 
         self.__pickle_protocol = pickle_protocol if pickle_protocol is not None else defaults["cache.pickle_protocol"]
 
-    def get_file_path(self, context_id: str) -> pathlib.Path:
+    def _get_file_path(self, context_id: str) -> pathlib.Path:
         """
         Args:
             context_id: the file name without the file extension
@@ -45,7 +45,7 @@ class PickleFileCache(CacheBase):
             result: return value of the function call
         """
 
-        with open(self.get_file_path(context_id), mode="wb") as file:
+        with open(self._get_file_path(context_id), mode="wb") as file:
             pickle.dump(result, file, protocol=self.__pickle_protocol)
 
     def retrieve(self, context_id: str) -> ReturnValue:
@@ -60,7 +60,7 @@ class PickleFileCache(CacheBase):
             The return value of the function that corresponds to this context id
         """
 
-        path = self.get_file_path(context_id)
+        path = self._get_file_path(context_id)
         if not path.exists():
             raise CheckpointNotExist
 

@@ -4,7 +4,9 @@ Persistent cache for Python functions.
 
 ## Introduction
 
-`checkpointing` provides a decorator which allows you to cache the return value of a [pure function](https://en.wikipedia.org/wiki/Pure_function#Compiler_optimizations)[^1] on the disk.
+`checkpointing` provides a decorator which allows you to cache the return value of a
+[pure function](https://en.wikipedia.org/wiki/Pure_function#Compiler_optimizations)[^1],
+by default as a pickle file on the disk.
 When the function is called later with the same arguments, it automatically skips the function execution,
 retrieves the cached value and return.
 
@@ -39,7 +41,7 @@ calc is running for 1, 2
 result: 3
 ```
 
-Now the return value has been cached to disk, and if you rerun this script, the output will be
+Now the return value has been cached, and if you rerun this script, the output will be
 
 ```text
 result: 3
@@ -56,7 +58,7 @@ For example,
 The `checkpoint` has a built-in wise strategy to decide when it needs or doesn't need to re-execute the function.
 More details are discussed in [Behavior on Code Change](behavior.md).
 This is also the main advantage of `checkpointing` compared to other similar packages,
-see [Comparing with similar packages](comparison.md).
+see [Comparison with similar packages](comparison.md).
 
 !!! attention
     However, there are some cases where the checkpoint cannot correctly make the rerun decision.

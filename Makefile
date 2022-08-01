@@ -10,13 +10,12 @@ ws = 0.2
 integ:
 	python -m integtests.run $(kw) --wait-sec $(ws)
 
-doc: mandoc apidoc
-
-mandoc-serve:
+mandoc-serve: apidoc
 	mkdocs serve
 
-mandoc:
+mandoc: apidoc
 	mkdocs build
 
 apidoc:
-	pdoc checkpointing -o ./apidoc --docformat google
+	rm -rf ./docs/apidoc
+	pdoc checkpointing -o ./docs/apidoc --docformat google
