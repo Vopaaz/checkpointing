@@ -1,5 +1,5 @@
 from checkpointing.decorator.base import DecoratorCheckpoint
-from checkpointing.identifier.func_call import AutoHashIdentifier
+from checkpointing.identifier.func_call import AutoFuncCallIdentifier
 from checkpointing.cache import PickleFileCache
 
 
@@ -27,7 +27,7 @@ def checkpoint(
                               If None, use the global default `cache.pickle_protocol`
     """
 
-    identifier = AutoHashIdentifier()
+    identifier = AutoFuncCallIdentifier()
     cache = PickleFileCache(directory, cache_pickle_protocol)
     decorator = DecoratorCheckpoint(identifier, cache, on_error)
 

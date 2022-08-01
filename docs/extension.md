@@ -11,7 +11,7 @@ The `checkpoint` decorator is actually a shortcut for creating a
 which receives the following objects as parameters[^1] and coordinate them:
 
 - An identifier that creates an ID for any function call context:
-    [`AutoHashIdentifier`](./apidoc/checkpointing/identifier/func_call/hash.html){:target="_blank"}
+    [`AutoFuncCallIdentifier`](./apidoc/checkpointing/identifier/func_call/auto.html){:target="_blank"}
 - A cache that saves and retrieves the return value with a given ID,
     or reports that the ID hasn't been saved before:
     [`PickleFileCache`](./apidoc/checkpointing/cache/pickle_file.html){:target="_blank"}
@@ -29,7 +29,7 @@ Finally, decorate the function with `@DecoratorCheckpoint(identifier, cache)`
 !!! example
 
     ```python
-    from checkpointing import DecoratorCheckpoint, AutoHashIdentifier, PickleFileCache
+    from checkpointing import DecoratorCheckpoint, AutoFuncCallIdentifier, PickleFileCache
 
     class CustomizedCache:
         ... # Your implementation, see below
@@ -38,7 +38,7 @@ Finally, decorate the function with `@DecoratorCheckpoint(identifier, cache)`
         ... # Your implementation, see below
 
     # If you only want to change how the results are saved
-    @DecoratorCheckpoint(AutoHashIdentifier(), CustomizedCache()) 
+    @DecoratorCheckpoint(AutoFuncCallIdentifier(), CustomizedCache()) 
     def foo():
         return 0
 
@@ -114,7 +114,7 @@ The `retrieve` method takes a `ContextId` as the argument, and
 - raises an `CheckpointNotExist` special error, otherwise
 
 The data type of `ContextId` is determined by the identifier you use.
-If you use the built-in `AutoHashIdentifier`, 
+If you use the built-in `AutoFuncCallIdentifier`, 
 it will be a 
 [`hexdigest`](https://docs.python.org/3/library/hashlib.html#hashlib.hash.hexdigest){:target="_blank"}
 string.
@@ -126,7 +126,7 @@ wraps the built-in dictionary.
 from checkpointing import (
     DecoratorCheckpoint,
     CacheBase,
-    AutoHashIdentifier,
+    AutoFuncCallIdentifier,
     CheckpointNotExist
 )
 
@@ -143,7 +143,7 @@ class DictCache(CacheBase):
         else:
             return self.d[context_id]
 
-@DecoratorCheckpoint(AutoHashIdentifier(), DictCache())
+@DecoratorCheckpoint(AutoFuncCallIdentifier(), DictCache())
 def foo():
     return 0
 ```
