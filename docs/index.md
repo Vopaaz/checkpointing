@@ -140,7 +140,7 @@ This will terminate the function call and raise the internal error.
 This will rerun the function when an internal error occurs without raising any warning.
 
 
-#### Pickle Protocol
+#### Pickle protocol
 
 The function return value will be saved with the built-in [pickle](https://docs.python.org/3/library/pickle.html) module.
 We use [protocol 5](https://peps.python.org/pep-0574/) by default for all Python versions,
@@ -174,6 +174,12 @@ defaults["cache.pickle_protocol"] = pickle.HIGHEST_PROTOCOL
 ```
 
 Please set this at the top level of your module/script, before you create any `checkpoint`.
+
+#### Further customization
+
+If you want more flexibility, such as storing the cache not as a pickle file,
+or ignore/consider some additional aspects of the function call context,
+please see [Extending the Checkpoint](extension.md) for details.
 
 
 ### Force rerun a checkpoint
