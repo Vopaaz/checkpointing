@@ -8,14 +8,14 @@ build:
     python: "3.9"
 
   jobs:
-
-    pre_install:
-      - pip install -r dev-requirements.txt
-      - pip install -r requirements.txt
-
     pre_build:
       - rm -rf ./docs/apidoc
       - pdoc checkpointing -o ./docs/apidoc --docformat google
+
+python:
+  install:
+    - requirements: dev-requirements.txt
+    - requirements: requirements.txt
 
 mkdocs:
   configuration: mkdocs.yml
