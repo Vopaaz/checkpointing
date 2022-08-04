@@ -170,7 +170,7 @@ import pickle
 
 defaults["cache.filesystem.directory"] = "other_dir"
 defaults["checkpoint.on_error"] = "ignore"
-defaults["cache.pickle_protocol"] = pickle.HIGHEST_PROTOCOL
+defaults["cache.pickle_protocol"] = pickle.DEFAULT_PROTOCOL
 ```
 
 Please set this at the top level of your module/script, before you create any `checkpoint`.
