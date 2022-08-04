@@ -1,10 +1,10 @@
-from checkpointing.identifier.func_call.hash import AutoHashIdentifier
+from checkpointing.identifier.func_call.auto import AutoFuncCallIdentifier
 from checkpointing.identifier.func_call.context import FuncCallContext
 import inspect
 
 
 def assert_id_neq(c1: FuncCallContext, c2: FuncCallContext):
-    ahi = AutoHashIdentifier()
+    ahi = AutoFuncCallIdentifier()
     assert ahi.identify(c1) != ahi.identify(c2)
 
 def test_change_argument_default_value():

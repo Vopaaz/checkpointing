@@ -7,8 +7,10 @@ nav:
   - "User Guide": index.md
   - "Behavior on Code Change": behavior.md
   - "Caveats": caveats.md
-  - "Comparison with Similar Packages": comparison.md
+  - "Comparison with Alternatives": comparison.md
+  - "Extending the Checkpoint": extension.md
   - "Changelog": changelog.md
+  - "API Reference": apidoc/index.html" target="_blank
 
 markdown_extensions:
   - footnotes
@@ -20,8 +22,12 @@ markdown_extensions:
       use_pygments: true
   - pymdownx.inlinehilite
   - pymdownx.snippets
-  - pymdownx.superfences
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
   - pymdownx.details
+  - attr_list
 
 repo_url: https://github.com/Vopaaz/checkpointing
 repo_name: Vopaaz/checkpointing

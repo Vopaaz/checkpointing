@@ -21,14 +21,15 @@ class DecoratorCheckpoint(ABC, Generic[ReturnValue]):
     def __init__(self, identifier: FuncCallIdentifierBase, cache: CacheBase, on_error: str = None) -> None:
         """
         Args:
-            identifier: the function call identifier that creates an ID for the function call context
-            cache: the cache instance that saves and reads the return value with the given ID
+            identifier: the function call identifier that creates an ID for any function call context
+            cache: the cache that saves and retrieves the return value with a given ID
             on_error: the behavior when retrieval or saving raises unexpected exceptions
                 (exceptions other than checkpointing.CheckpointNotExist). Possible values are:
                 - `"raise"`, the exception will be raised.
                 - `"warn"`, a warning will be issued to inform that the checkpointing task has failed.
                     But the user function will be invoked and executed as if it wasn't checkpointed.
                 - `"ignore"`, the exception will be ignored and the user function will be invoked and executed normally.
+                
                 If None, use the global default `checkpoint.on_error`.
         """
 

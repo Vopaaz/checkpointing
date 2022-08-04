@@ -151,8 +151,9 @@ class FuncCallContext:
 
     def get_nonlocal_variable(self, varname: str) -> Any:
         r"""
-        Try to get the nonlocal variable `varname` from the caller's frame.
-        If it doesn't exist in neither `globals` and `locals`, return `None`.
+        Try to get the nonlocal variable `varname` from the function call's
+        `locals()` and `globals()`.
+        If it doesn't exist in neither of them, return `None`.
         If the caller_frame is not provided, the result is always `None`.
 
         >>> import inspect

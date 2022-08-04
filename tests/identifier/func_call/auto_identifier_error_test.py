@@ -1,5 +1,5 @@
 from checkpointing.identifier.func_call.context import FuncCallContext
-from checkpointing.identifier import AutoHashIdentifier
+from checkpointing.identifier import AutoFuncCallIdentifier
 from checkpointing.exceptions import GlobalStatementError, NonlocalStatementError
 from pytest import raises
 
@@ -11,7 +11,7 @@ def test_global_statement_leads_to_error():
         global x
 
     with raises(GlobalStatementError):
-        AutoHashIdentifier().identify(FuncCallContext(foo, (), {}))
+        AutoFuncCallIdentifier().identify(FuncCallContext(foo, (), {}))
 
 def test_nonlocal_statement_leads_to_error():
 
@@ -21,4 +21,4 @@ def test_nonlocal_statement_leads_to_error():
         nonlocal x
 
     with raises(NonlocalStatementError):
-        AutoHashIdentifier().identify(FuncCallContext(foo, (), {}))
+        AutoFuncCallIdentifier().identify(FuncCallContext(foo, (), {}))

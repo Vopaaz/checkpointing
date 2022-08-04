@@ -4,7 +4,9 @@ Persistent cache for Python functions.
 
 ## Introduction
 
-`checkpointing` provides a decorator which allows you to cache the return value of a [pure function](https://en.wikipedia.org/wiki/Pure_function#Compiler_optimizations)[^1] on the disk.
+`checkpointing` provides a decorator which allows you to cache the return value of a
+[pure function](https://en.wikipedia.org/wiki/Pure_function#Compiler_optimizations)[^1],
+by default as a pickle file on the disk.
 When the function is called later with the same arguments, it automatically skips the function execution,
 retrieves the cached value and return.
 
@@ -39,7 +41,7 @@ calc is running for 1, 2
 result: 3
 ```
 
-Now the return value has been cached to disk, and if you rerun this script, the output will be
+Now the return value has been cached, and if you rerun this script, the output will be
 
 ```text
 result: 3
@@ -56,7 +58,7 @@ For example,
 The `checkpoint` has a built-in wise strategy to decide when it needs or doesn't need to re-execute the function.
 More details are discussed in [Behavior on Code Change](behavior.md).
 This is also the main advantage of `checkpointing` compared to other similar packages,
-see [Comparing with similar packages](comparison.md).
+see [Comparison with similar packages](comparison.md).
 
 !!! attention
     However, there are some cases where the checkpoint cannot correctly make the rerun decision.
@@ -138,7 +140,7 @@ This will terminate the function call and raise the internal error.
 This will rerun the function when an internal error occurs without raising any warning.
 
 
-#### Pickle Protocol
+#### Pickle protocol
 
 The function return value will be saved with the built-in [pickle](https://docs.python.org/3/library/pickle.html) module.
 We use [protocol 5](https://peps.python.org/pep-0574/) by default for all Python versions,
@@ -172,6 +174,12 @@ defaults["cache.pickle_protocol"] = pickle.HIGHEST_PROTOCOL
 ```
 
 Please set this at the top level of your module/script, before you create any `checkpoint`.
+
+#### Further customization
+
+If you want more flexibility, such as storing the cache not as a pickle file,
+or ignore/consider some additional aspects of the function call context,
+please see [Extending the Checkpoint](extension.md) for details.
 
 
 ### Force rerun a checkpoint

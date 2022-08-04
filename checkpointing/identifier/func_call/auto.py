@@ -11,7 +11,7 @@ import copy
 from checkpointing.hash import hash_anything
 
 
-class AutoHashIdentifier(FuncCallIdentifierBase):
+class AutoFuncCallIdentifier(FuncCallIdentifierBase):
     def __init__(self, algorithm: str = None, pickle_protocol: int = None) -> None:
         """
         Args:

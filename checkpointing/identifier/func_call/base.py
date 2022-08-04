@@ -18,6 +18,6 @@ class FuncCallIdentifierBase(ABC):
             a unique identifier of this function call, name it `ContextId`.
 
             Any change in the `context` that could result in a different return value
-            of a function call should be differentiable in the returned `ContextId`.
+            of a function call should result in a different returned `ContextId`.
         """
         pass
