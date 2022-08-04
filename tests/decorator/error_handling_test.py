@@ -1,7 +1,7 @@
 from checkpointing.decorator.base import DecoratorCheckpoint
 from checkpointing.exceptions import ExpensiveOverheadWarning, CheckpointFailedError, CheckpointFailedWarning
 from checkpointing.cache import CacheBase, InMemoryLRUCache
-from checkpointing import ContextId, ReturnValue, AutoHashIdentifier
+from checkpointing import ContextId, ReturnValue, AutoFuncCallIdentifier
 from pytest import raises
 import warnings
 import time
@@ -25,10 +25,10 @@ class ErrorCache(InMemoryLRUCache):
         raise ValueError
 
 
-slow_deco = DecoratorCheckpoint(AutoHashIdentifier(), SlowCache(), on_error="raise")
-error_deco = DecoratorCheckpoint(AutoHashIdentifier(), ErrorCache(), on_error="raise")
-warn_deco = DecoratorCheckpoint(AutoHashIdentifier(), ErrorCache(), on_error="warn")
-ignore_deco = DecoratorCheckpoint(AutoHashIdentifier(), ErrorCache(), on_error="ignore")
+slow_deco = DecoratorCheckpoint(AutoFuncCallIdentifier(), SlowCache(), on_error="raise")
+error_deco = DecoratorCheckpoint(AutoFuncCallIdentifier(), ErrorCache(), on_error="raise")
+warn_deco = DecoratorCheckpoint(AutoFuncCallIdentifier(), ErrorCache(), on_error="warn")
+ignore_deco = DecoratorCheckpoint(AutoFuncCallIdentifier(), ErrorCache(), on_error="ignore")
 
 
 @slow_deco

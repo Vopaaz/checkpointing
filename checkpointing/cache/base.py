@@ -45,7 +45,7 @@ class CacheBase(ABC, Generic[ContextId, ReturnValue]):
     def synchronize_with(self, lock) -> SynchronizedCache:
         """
         Args:
-            lock: the Lock object that supports the similar protocol as threading/multiprocessing.Lock()
+            lock: the Lock object that supports the similar interface as threading/multiprocessing.Lock()
 
         Returns:
             A process-safe version of this cache using the given lock.
@@ -59,7 +59,8 @@ CacheSubclass = TypeVar("CacheSubclass", bound=CacheBase)
 class SynchronizedCache(CacheBase, Generic[CacheSubclass]):
     """
     Base class for synchronized cache. In the constructor of a concrete subclass,
-    a `self.lock` attribute should be assigned as a thread/process lock, or any analog of such synchronization locks.
+    a `self.lock` attribute should be assigned as a thread/process lock, 
+    or any analog of such synchronization locks.
     """
 
     def __init__(self, cache, lock) -> None:

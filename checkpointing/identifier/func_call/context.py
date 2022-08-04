@@ -1,5 +1,6 @@
 import inspect
-from typing import List, Dict, Tuple, Callable, Any
+from typing import List, Dict, Tuple, Callable, Any, Union
+from collections import OrderedDict
 from checkpointing._typing import ReturnValue
 from types import FrameType
 import copy
@@ -33,7 +34,7 @@ class FuncCallContext:
     @property
     def arguments(self) -> Dict:
         """
-        Dictionary or OrderedDictionary (depending on the python version) of the function arguments and their actually applied parameter values in the function call.
+        Dictionary of the function arguments and their actually applied parameter values in the function call.
 
         >>> def foo(a, b=1, c=None, d=4):
         ...     pass
@@ -51,12 +52,12 @@ class FuncCallContext:
         >>>
         >>> ctx = FuncCallContext(bar, (1, 2), {"c": 3})
         >>>
-        >>> dict(ctx.arguments)
+        >>> ctx.arguments
         {'args': (1, 2), 'kwargs': {'c': 3}}
         """
         args = self.__signature.bind(*self.__args, **self.__kwargs)
         args.apply_defaults()
-        return args.arguments
+        return dict(args.arguments)
 
     @property
     def full_name(self) -> str:
@@ -150,8 +151,9 @@ class FuncCallContext:
 
     def get_nonlocal_variable(self, varname: str) -> Any:
         r"""
-        Try to get the nonlocal variable `varname` from the caller's frame.
-        If it doesn't exist in neither `globals` and `locals`, return `None`.
+        Try to get the nonlocal variable `varname` from the function call's
+        `locals()` and `globals()`.
+        If it doesn't exist in neither of them, return `None`.
         If the caller_frame is not provided, the result is always `None`.
 
         >>> import inspect

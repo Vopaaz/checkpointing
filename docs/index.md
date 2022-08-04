@@ -4,9 +4,20 @@ Persistent cache for Python functions.
 
 ## Introduction
 
-`checkpointing` provides a decorator which allows you to cache the return value of a [pure function](https://en.wikipedia.org/wiki/Pure_function#Compiler_optimizations)[^1] on the disk.
+`checkpointing` provides a decorator which allows you to cache the return value of a
+[pure function](https://en.wikipedia.org/wiki/Pure_function#Compiler_optimizations)[^1],
+by default as a pickle file on the disk.
 When the function is called later with the same arguments, it automatically skips the function execution,
 retrieves the cached value and return.
+
+
+[^1]: We take the alternative definition of the "pure function", meaning that it only has property 2:
+"the function has no side effects (no mutation of local static variables, non-local variables,
+mutable reference arguments or input/output streams)".
+We do allow the return value to vary due to changes in non-local variables and other factors,
+as it's often the case in project development.
+
+
 
 For example,
 
@@ -30,7 +41,7 @@ calc is running for 1, 2
 result: 3
 ```
 
-Now the return value has been cached to disk, and if you rerun this script, the output will be
+Now the return value has been cached, and if you rerun this script, the output will be
 
 ```text
 result: 3
@@ -47,7 +58,7 @@ For example,
 The `checkpoint` has a built-in wise strategy to decide when it needs or doesn't need to re-execute the function.
 More details are discussed in [Behavior on Code Change](behavior.md).
 This is also the main advantage of `checkpointing` compared to other similar packages,
-see [Comparing with similar packages](comparison.md).
+see [Comparison with similar packages](comparison.md).
 
 !!! attention
     However, there are some cases where the checkpoint cannot correctly make the rerun decision.
@@ -129,17 +140,25 @@ This will terminate the function call and raise the internal error.
 This will rerun the function when an internal error occurs without raising any warning.
 
 
-#### Pickle Protocol
+#### Pickle protocol
 
 The function return value will be saved with the built-in [pickle](https://docs.python.org/3/library/pickle.html) module.
-We use the `pickle.DEFAULT_PROTOCOL` by default. 
+We use [protocol 5](https://peps.python.org/pep-0574/) by default for all Python versions,
+in favor of its ability to efficiently handle large data. [^2]
 However, if you want to change the protocol, you could use the `cache_pickle_protocol` option.
+
+[^2]: For Python 3.7, we use the backport [pickle5](https://pypi.org/project/pickle5/) package to support it.
 
 ```python
 import pickle
 
-@checkpoint(cache_pickle_protocol=pickle.HIGHEST_PROTOCOL)
+@checkpoint(cache_pickle_protocol=pickle.DEFAULT_PROTOCOL)
 ```
+
+!!! warning
+
+    Using protocol earlier than 5 will cause significantly more memory when saving large data objects.
+
 
 #### Global setting
 
@@ -155,6 +174,12 @@ defaults["cache.pickle_protocol"] = pickle.HIGHEST_PROTOCOL
 ```
 
 Please set this at the top level of your module/script, before you create any `checkpoint`.
+
+#### Further customization
+
+If you want more flexibility, such as storing the cache not as a pickle file,
+or ignore/consider some additional aspects of the function call context,
+please see [Extending the Checkpoint](extension.md) for details.
 
 
 ### Force rerun a checkpoint
@@ -184,10 +209,3 @@ Please be aware that
   Please see [Caveats](caveats.md),
   and avoid those cases when the rerun condition cannot be correctly determined.
 
-
-
-[^1]: We take the alternative definition of the "pure function", meaning that it only has property 2:
-"the function has no side effects (no mutation of local static variables, non-local variables,
-mutable reference arguments or input/output streams)".
-We do allow the return value to vary due to changes in non-local variables and other factors,
-as it's often the case in project development.

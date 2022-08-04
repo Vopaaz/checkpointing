@@ -1,8 +1,14 @@
-name: Testing on Push
+name: Testing on Push and PR
 
 on: 
   push:
+    branches:
+      - '**'
     tags-ignore:
+      - '**'
+
+  pull_request:
+    branches:
       - '**'
 
 jobs:
@@ -25,14 +31,14 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
           pip install -r dev-requirements.txt
+          pip install -r requirements.txt
 
       - name: Run unit tests
         run: pytest tests/ checkpointing/
 
       - name: Run integration tests
-        run: python -m integtests.run --wait-sec 2
+        run: python -m integtests.run --wait-sec 3
 
       - name: "Upload coverage to Codecov"
         uses: codecov/codecov-action@v3

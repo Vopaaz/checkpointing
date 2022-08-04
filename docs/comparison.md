@@ -1,7 +1,7 @@
 # Comparison with Similar Packages
 
 Some other packages have similar functionality as `checkpointing`.
-However, we handle some cases better than them, as explained below.
+However, we handle a few cases better than them, as explained below.
 
 
 ??? info "How the cases are written"
