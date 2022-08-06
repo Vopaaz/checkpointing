@@ -1,5 +1,5 @@
 from checkpointing.util import pickle
-from testutils import rmdir_after, tmpdir, mkdir_before
+from tests.testutils import rmdir_after, tmpdir, mkdir_before
 from pytest import raises
 from checkpointing.config import defaults
 

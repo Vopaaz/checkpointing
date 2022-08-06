@@ -1,0 +1,1 @@
+from checkpointing.ipython.base import CellCheckpoint
