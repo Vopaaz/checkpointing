@@ -5,7 +5,7 @@ Persistent cache for Python functions.
 ![Codecov](https://img.shields.io/codecov/c/github/Vopaaz/checkpointing?style=for-the-badge&token=GGtL5JSsXH)
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/checkpointing?style=for-the-badge&)
 ![PyPI](https://img.shields.io/pypi/v/checkpointing?style=for-the-badge&)
-![GitHub Workflow Status](https://img.shields.io/github/workflow/status/Vopaaz/checkpointing/Testing%20on%20Master?style=for-the-badge)
+![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/Vopaaz/checkpointing/CI-master.yml?branch=master&style=for-the-badge)
 
 
 ## Documentation
