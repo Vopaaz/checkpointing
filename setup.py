@@ -8,7 +8,7 @@ with open(r"requirements.txt", "r", encoding="utf-8") as f:
 
 setup(
     name="checkpointing",
-    version="0.1.2",
+    version="1.0.0",
     author="Vopaaz",
     author_email="liyifan945@gmail.com",
     url="https://github.com/Vopaaz/checkpointing",
@@ -17,12 +17,13 @@ setup(
     long_description_content_type="text/markdown",
     packages=find_packages(),
     install_requires=install_requires,
-    python_requires=">=3.7, <=3.10",
+    python_requires=">=3.8, <=3.12",
     classifiers=[
-        "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
         "License :: OSI Approved :: MIT License",
     ],
 )
