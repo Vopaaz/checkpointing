@@ -17,8 +17,8 @@ pandas>=1.3.5
 scikit-learn>=1.0.2
 
 # Similar packages for integration test comparision
-cachier==1.5.4
-joblib==1.1.0
+cachier==2.2.1
+joblib==1.3.2
 
 # Documentation
 pdoc==12.0.2
