@@ -43,7 +43,7 @@ jobs:
         run: pytest tests/ checkpointing/
 
       - name: Run integration tests
-        if: ${{ matrix.python-version }} != '3.12'
+        if: ${{ matrix.python-version != '3.12' }}
         run: python -m integtests.run --wait-sec 3
 
       - name: "Upload coverage to Codecov"
