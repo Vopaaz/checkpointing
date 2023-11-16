@@ -35,9 +35,9 @@ jobs:
           pip install -r requirements.txt
 
       - name: Install comparison dependencies
-        if: ${{ matrix.python-version }} != '3.12'
+        if: ${{ matrix.python-version != '3.12' }}
         run: |
-          pip install -r dev-requirements.txt
+          pip install -r comparison-requirements.txt
 
       - name: Run unit tests
         run: pytest tests/ checkpointing/
