@@ -15,7 +15,6 @@ def hash_with_dill(stream: HashStream, obj: Any, pickle_protocol: int) -> None:
     dill.dump(
         obj,
         stream,
-        # Although we ported pickle5 for python 3.7-, dill is not aware of it. Using protocol = 5 for dill will cause it to fail
         protocol=min(pickle_protocol, dill.HIGHEST_PROTOCOL),
         byref=True,
         recurse=False,

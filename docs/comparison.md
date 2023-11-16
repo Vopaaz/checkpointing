@@ -50,7 +50,7 @@ However, we handle a few cases better than them, as explained below.
 ## cachier
 
 The following cases are tested with
-[cachier](https://github.com/shaypal5/cachier) version 1.5.4[^1].
+[cachier](https://github.com/shaypal5/cachier) version 2.2.1[^1].
 
 ### Code change
 
@@ -123,7 +123,7 @@ such as numpy and pandas.
 
 ## joblib
 
-The following cases are tested with [joblib](https://joblib.readthedocs.io/en/latest/memory.html#memory) version 1.1.0[^1].
+The following cases are tested with [joblib](https://joblib.readthedocs.io/en/latest/memory.html#memory) version 1.3.2[^1].
 
 ### Irrelevant code change
 

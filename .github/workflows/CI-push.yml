@@ -1,6 +1,6 @@
 name: Testing on Push and PR
 
-on: 
+on:
   push:
     branches:
       - '**'
@@ -16,7 +16,7 @@ jobs:
 
     strategy:
       matrix:
-        python-version: ["3.7", "3.8", "3.9", "3.10"]
+        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
 
     runs-on: ubuntu-latest
 
@@ -34,10 +34,16 @@ jobs:
           pip install -r dev-requirements.txt
           pip install -r requirements.txt
 
+      - name: Install comparison dependencies
+        if: ${{ matrix.python-version != '3.12' }}
+        run: |
+          pip install -r comparison-requirements.txt
+
       - name: Run unit tests
         run: pytest tests/ checkpointing/
 
       - name: Run integration tests
+        if: ${{ matrix.python-version != '3.12' }}
         run: python -m integtests.run --wait-sec 3
 
       - name: "Upload coverage to Codecov"

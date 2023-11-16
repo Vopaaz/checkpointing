@@ -146,7 +146,7 @@ This will rerun the function when an internal error occurs without raising any w
 
 The function return value will be saved with the built-in [pickle](https://docs.python.org/3/library/pickle.html) module.
 We use [protocol 5](https://peps.python.org/pep-0574/) by default for all Python versions,
-in favor of its ability to efficiently handle large data. [2]
+in favor of its ability to efficiently handle large data.
 However, if you want to change the protocol, you could use the `cache_pickle_protocol` option.
 
 ```python
@@ -216,5 +216,3 @@ Please be aware that
 mutable reference arguments or input/output streams)".
 We do allow the return value to vary due to changes in non-local variables and other factors,
 as it's often the case in project development.
-
-[2]: For Python 3.7, we use the backport [pickle5](https://pypi.org/project/pickle5/) package to support it.

@@ -5,7 +5,7 @@ test: unit integ
 unit:
 	pytest tests/ checkpointing/
 
-ws = 0.2
+ws = 1
 
 integ:
 	python -m integtests.run $(kw) --wait-sec $(ws)

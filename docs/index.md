@@ -147,8 +147,6 @@ We use [protocol 5](https://peps.python.org/pep-0574/) by default for all Python
 in favor of its ability to efficiently handle large data. [^2]
 However, if you want to change the protocol, you could use the `cache_pickle_protocol` option.
 
-[^2]: For Python 3.7, we use the backport [pickle5](https://pypi.org/project/pickle5/) package to support it.
-
 ```python
 import pickle
 
