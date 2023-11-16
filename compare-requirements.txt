@@ -1,0 +1,3 @@
+# Similar packages for integration test comparision
+cachier==2.2.1
+joblib==1.3.2

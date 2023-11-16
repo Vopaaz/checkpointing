@@ -35,10 +35,16 @@ jobs:
           pip install -r dev-requirements.txt
           pip install -r requirements.txt
 
+      - name: Install comparison dependencies
+        if: ${{ matrix.python-version }} != '3.12'
+        run: |
+          pip install -r dev-requirements.txt
+
       - name: Run unit tests
         run: pytest tests/ checkpointing/
 
       - name: Run integration tests
+        if: ${{ matrix.python-version }} != '3.12'
         run: python -m integtests.run --wait-sec 3
 
       - name: "Upload coverage to Codecov"
