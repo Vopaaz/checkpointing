@@ -8,7 +8,7 @@ with open(r"requirements.txt", "r", encoding="utf-8") as f:
 
 setup(
     name="checkpointing",
-    version="1.0.0",
+    version="1.0.1",
     author="Vopaaz",
     author_email="liyifan945@gmail.com",
     url="https://github.com/Vopaaz/checkpointing",

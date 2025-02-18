@@ -1,6 +1,11 @@
 ## v1.0.x
 
-### v1.0.0
+### v1.0.1
+
+- Added support to decorate a function without parenthesis (`@checkpoint` instead of `@checkpoint()`)
+    - Thanks for the proposal in https://github.com/Vopaaz/checkpointing/issues/8
+
+### [v1.0.0](https://checkpointing.readthedocs.io/en/v1.0.0/)
 
 - Drop support for Python 3.7 to remove the pickle5 dependency
 

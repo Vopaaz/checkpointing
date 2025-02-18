@@ -25,10 +25,17 @@ def checkpoint(
 
         cache_pickle_protocol: the pickle protocol used by the cache to save results to the disk.
                               If None, use the global default `cache.pickle_protocol`
+
+    Optionally user can directly decorate the function with `@checkpoint` (without parenthesis),
+    this will cause the function to be passed in directly with the `directory` parameter.
     """
 
+    # If true, the `directory` is actually the decorated function
+    # and the actual `directory` is None
+    used_without_parenthesis = callable(directory)
+
     identifier = AutoFuncCallIdentifier()
-    cache = PickleFileCache(directory, cache_pickle_protocol)
+    cache = PickleFileCache(None if used_without_parenthesis else directory, cache_pickle_protocol)
     decorator = DecoratorCheckpoint(identifier, cache, on_error)
 
-    return decorator
+    return decorator(directory) if used_without_parenthesis else decorator

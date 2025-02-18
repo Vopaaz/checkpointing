@@ -5,7 +5,6 @@ import shutil
 import argparse
 from checkpointing import defaults
 from termcolor import cprint
-import os
 from atomicwrites import atomic_write
 import time
 
@@ -153,7 +152,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument("keyword", nargs="?", type=str, help="Only run tests including this keyword", default=None)
-    parser.add_argument("--wait-sec", nargs="?", type=float, help="How long to wait after file copy", default=0.1)
+    parser.add_argument("--wait-sec", nargs="?", type=float, help="How long to wait after file copy", default=1)
 
     args = parser.parse_args()
     keyword = args.keyword
